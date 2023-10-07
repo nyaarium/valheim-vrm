@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <Version>1.2</Version>
+    <Version>1.2.0</Version>
     <TargetFramework>net471</TargetFramework>
-
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -50,62 +49,59 @@
       <HintPath>$(VALHEIM_INSTALL)\unstripped_corlib\UnityEngine.UI.dll</HintPath>
     </Reference>
 <!--    <Reference Include="UniUnlit">-->
-<!--      <HintPath>..\UniUnlit.dll</HintPath>-->
+<!--      <HintPath>$(VALHEIM_UNITY_LIBS)\UniUnlit.dll</HintPath>-->
 <!--    </Reference>-->
     <Reference Include="VRM">
-      <HintPath>..\libs\VRM.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRM.dll</HintPath>
     </Reference>
     <Reference Include="VRM10">
-      <HintPath>..\libs\VRM10.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRM10.dll</HintPath>
     </Reference>
     <Reference Include="VrmLib">
-      <HintPath>..\libs\VrmLib.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VrmLib.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.GLTF.IO.Runtime">
-      <HintPath>..\libs\VRMShaders.GLTF.IO.Runtime.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRMShaders.GLTF.IO.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.GLTF.UniUnlit.Runtime">
-      <HintPath>..\libs\VRMShaders.GLTF.UniUnlit.Runtime.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRMShaders.GLTF.UniUnlit.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.VRM.IO.Runtime">
-      <HintPath>..\libs\VRMShaders.VRM.IO.Runtime.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRMShaders.VRM.IO.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.VRM10.Format.Runtime">
-      <HintPath>..\libs\VRMShaders.VRM10.Format.Runtime.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRMShaders.VRM10.Format.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.VRM10.MToon10.Runtime">
-      <HintPath>..\libs\VRMShaders.VRM10.MToon10.Runtime.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\VRMShaders.VRM10.MToon10.Runtime.dll</HintPath>
     </Reference>
 
     <Reference Include="FastSpringBone">
-      <HintPath>..\libs\FastSpringBone.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\FastSpringBone.dll</HintPath>
     </Reference>
     <Reference Include="FastSpringBone10">
-      <HintPath>..\libs\FastSpringBone10.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\FastSpringBone10.dll</HintPath>
     </Reference>
 <!--    <Reference Include="MeshUtility">-->
-<!--      <HintPath>..\libs\MeshUtility.dll</HintPath>-->
+<!--      <HintPath>$(VALHEIM_UNITY_LIBS)\MeshUtility.dll</HintPath>-->
 <!--    </Reference>-->
     <Reference Include="MToon">
-      <HintPath>..\libs\MToon.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\MToon.dll</HintPath>
     </Reference>
 <!--    <Reference Include="ShaderProperty.Runtime">-->
-<!--      <HintPath>..\libs\ShaderProperty.Runtime.dll</HintPath>-->
+<!--      <HintPath>$(VALHEIM_UNITY_LIBS)\ShaderProperty.Runtime.dll</HintPath>-->
 <!--    </Reference>-->
     <Reference Include="UniGLTF">
-      <HintPath>..\libs\UniGLTF.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\UniGLTF.dll</HintPath>
     </Reference>
     <Reference Include="UniGLTF.Utils">
-      <HintPath>..\libs\UniGLTF.Utils.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\UniGLTF.Utils.dll</HintPath>
     </Reference>
-    <Reference Include="UniGLTF.Editor">
-      <HintPath>..\libs\UniGLTF.Editor.dll</HintPath>
-    </Reference>
-<!--    <Reference Include="UniGLTF.Samples.ScreenSpace">-->
-<!--      <HintPath>..\libs\UniGLTF.Samples.ScreenSpace.dll</HintPath>-->
+<!--    <Reference Include="UniGLTF.Editor">-->
+<!--      <HintPath>$(VALHEIM_UNITY_LIBS)\UniGLTF.Editor.dll</HintPath>-->
 <!--    </Reference>-->
     <Reference Include="UniHumanoid">
-      <HintPath>..\libs\UniHumanoid.dll</HintPath>
+      <HintPath>$(VALHEIM_UNITY_LIBS)\UniHumanoid.dll</HintPath>
     </Reference>
 
 
@@ -120,9 +116,10 @@
     <!-- Set Paths -->
     <PropertyGroup>
       <BepInExPluginPath>$(VALHEIM_INSTALL)\BepInEx\plugins\</BepInExPluginPath>
-      <LibsPath>$(SolutionDir)libs\</LibsPath>
-      <ShadersPath>$(SolutionDir)shaders\</ShadersPath>
       <ManagedPath>$(VALHEIM_INSTALL)\valheim_Data\Managed\</ManagedPath>
+      
+      <LibsPath>$(VALHEIM_UNITY_LIBS)</LibsPath>
+      <ShadersPath>$(SolutionDir)shaders\</ShadersPath>
       <Pdb2MdbPath>$(SolutionDir)pdb2mdb.exe</Pdb2MdbPath>
       <UnstrippedCorlibPath>$(VALHEIM_INSTALL)\unstripped_corlib\</UnstrippedCorlibPath>
     </PropertyGroup>
@@ -139,43 +136,75 @@
     <Exec Command="del &quot;$(BepInExPluginPath)$(TargetName).pdb&quot;" />
     <Exec Command="del &quot;$(BepInExPluginPath)$(TargetFileName).mdb&quot;" />
 
-    <!-- Copy all files from Libs to ManagedPath -->
-    <Exec Command="copy &quot;$(LibsPath)*.*&quot; &quot;$(ManagedPath)&quot;" />
+    <!-- Copyable files -->
+    <ItemGroup>
+      <LibFiles Include="$(LibsPath)\FastSpringBone.dll" />
+      <LibFiles Include="$(LibsPath)\FastSpringBone10.dll" />
+      <LibFiles Include="$(LibsPath)\MToon.dll" />
+      <LibFiles Include="$(LibsPath)\System.dll" />
+      <LibFiles Include="$(LibsPath)\UniGLTF.dll" />
+      <LibFiles Include="$(LibsPath)\UniHumanoid.dll" />
+      <LibFiles Include="$(LibsPath)\UnityEngine.AnimationModule.dll" />
+      <LibFiles Include="$(LibsPath)\UnityEngine.AssetBundleModule.dll" />
+      <LibFiles Include="$(LibsPath)\UnityEngine.CoreModule.dll" />
+      <LibFiles Include="$(LibsPath)\UnityEngine.dll" />
+      <LibFiles Include="$(LibsPath)\VRM.dll" />
+      <LibFiles Include="$(LibsPath)\VRM10.dll" />
+      <LibFiles Include="$(LibsPath)\VrmLib.dll" />
+      <LibFiles Include="$(LibsPath)\VRMShaders.GLTF.IO.Runtime.dll" />
+      <LibFiles Include="$(LibsPath)\VRMShaders.GLTF.UniUnlit.Runtime.dll" />
+      <LibFiles Include="$(LibsPath)\VRMShaders.VRM.IO.Runtime.dll" />
+      <LibFiles Include="$(LibsPath)\VRMShaders.VRM10.Format.Runtime.dll" />
+      <LibFiles Include="$(LibsPath)\VRMShaders.VRM10.MToon10.Runtime.dll" />
+      <LibFiles Include="$(LibsPath)\UnityEngine.PhysicsModule.dll" />
+      <LibFiles Include="$(LibsPath)\UnityEngine.UI.dll" />
+      <LibFiles Include="$(LibsPath)\UniGLTF.Utils.dll" />
+    </ItemGroup>
+
+
+    <!-- COPY FILES TO LOCAL VALHIEM -->
+    <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ManagedPath)" />
     <Exec Command="copy &quot;$(ShadersPath)*.*&quot; &quot;$(BepInExPluginPath)&quot;" />
 
-    <!-- Copy named files from UnstrippedCorlibPath to ManagedPath -->
-    <Exec Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.AnimationModule.dll&quot; &quot;$(ManagedPath)&quot;" />
-    <Exec Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.AssetBundleModule.dll&quot; &quot;$(ManagedPath)&quot;" />
-    <Exec Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.CoreModule.dll&quot; &quot;$(ManagedPath)&quot;" />
-    <Exec Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.PhysicsModule.dll&quot; &quot;$(ManagedPath)&quot;" />
-    <Exec Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.UI.dll&quot; &quot;$(ManagedPath)&quot;" />
 
-    <!-- Actions for Debug Configuration -->
+    <!-- DEBUG BUILD STUFF -->
     <Exec Condition=" '$(Configuration)' == 'Debug' " Command="&quot;$(Pdb2MdbPath)&quot; &quot;$(TargetPath)&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Debug' " Command="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;$(BepInExPluginPath)$(TargetFileName)&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Debug' " Command="copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(BepInExPluginPath)$(TargetName).pdb&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Debug' " Command="copy &quot;$(TargetDir)$(TargetFileName).mdb&quot; &quot;$(BepInExPluginPath)$(TargetFileName).mdb&quot;" />
 
-    <!-- Actions for Release Configuration -->
+    
+    
+    
+    <!-- RELEASE BUILD STUFF -->
+ 
+    <MakeDir Directories="$(ReleasePath)" Condition=" '$(Configuration)' == 'Release' " />
+    <MakeDir Directories="$(ReleaseManagedPath)" Condition=" '$(Configuration)' == 'Release' " />
+    <MakeDir Directories="$(ReleasePluginPath)" Condition=" '$(Configuration)' == 'Release' " />
+
+
+    <!-- Copy ValheimVRM.dll to correct places -->
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;$(BepInExPluginPath)$(TargetFileName)&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;$(ReleasePluginPath)$(TargetFileName)&quot;" />
-
-    <!-- Copying libs and shaders into /release directory for Release Configuration -->
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(LibsPath)*.*&quot; &quot;$(ReleaseManagedPath)&quot;" />
+    
+    
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(ShadersPath)*.*&quot; &quot;$(ReleasePluginPath)&quot;" />
 
-    <!-- Copying named files from UnstrippedCorlibPath into /release directory for Release Configuration -->
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.AnimationModule.dll&quot; &quot;$(ReleaseManagedPath)&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.AssetBundleModule.dll&quot; &quot;$(ReleaseManagedPath)&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.CoreModule.dll&quot; &quot;$(ReleaseManagedPath)&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.PhysicsModule.dll&quot; &quot;$(ReleaseManagedPath)&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(UnstrippedCorlibPath)UnityEngine.UI.dll&quot; &quot;$(ReleaseManagedPath)&quot;" />
-
+ 
+    <Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(LibFiles)" DestinationFolder="$(ReleaseManagedPath)" />
+    
+    <!--  Copy Other Project files  -->
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings____Default.txt&quot; &quot;$(ReleasePath)settings___Default.txt&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings_Example.txt&quot; &quot;$(ReleasePath)settings_Example.txt&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)README.md&quot; &quot;$(ReleasePath)README.md&quot;" />
 
 
+
+    <!-- Zip for release -->
+    <Exec Command="powershell -command &quot;Compress-Archive -Path '$(ReleasePath)' -DestinationPath '$(SolutionDir)ValheimVRM-$(Version).zip'&quot;" />
+
+
+    
   </Target>
 
 
