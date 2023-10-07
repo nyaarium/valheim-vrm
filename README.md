@@ -18,4 +18,4 @@ The name of the character in the game needs to correspond to a VRM and settings 
 ### Default Settings and avatar for people you do not have custom stuff for.
 
 you can have Default settings now, to use this. create a settings___Default.txt file, and pair
-___Default.vrm with it.
+___Default.vrm with it. NOTE: settings___Default.txt has 4 underscores, and ___Default.vrm has 3.
