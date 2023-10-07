@@ -239,21 +239,19 @@ namespace ValheimVRM
 
             public float EquipmentScale = 1.0f;
             public float AttackDistanceScale = 1.0f;
-            //public float AttackSpeedScale = 1.0f;
-            public float MeleeDamageScale = 1.0f;
-            public float RangedDamageScale = 1.0f;
             public float InteractionDistanceScale = 1.0f;
             public float SwimDepthScale = 1.0f;
-            public float SwimSpeedScale = 1.0f;
-            public float BaseHealthScale = 1.0f;
-            public float FoodHealthScale = 1.0f;
-            public float BaseStaminaScale = 1.0f;
-            public float FoodStaminaScale = 1.0f;
-            public float WeightLimitScale = 1.0f;
-            public float MovementSpeedScale = 1.0f;
-            public float JumpForceScale = 1.0f;
-            public float StealthScale = 1.0f;
-            public float DigestionTimeScale = 1.0f;
+
+
+
+
+
+
+
+
+
+            
+
 
             public override void OnUpdate(Dictionary<string, object> oldValues)
             {
@@ -317,23 +315,7 @@ namespace ValheimVRM
                         case nameof(SwimDepthScale):
                             player.m_swimDepth = player.m_swimDepth / (float)oldValue.Value * SwimDepthScale;
                             break;
-    
-                        case nameof(SwimSpeedScale):
-                            player.m_swimSpeed = player.m_swimSpeed / (float)oldValue.Value * SwimSpeedScale;
-                            break;
-    
-                        case nameof(WeightLimitScale):
-                            player.m_maxCarryWeight = player.m_maxCarryWeight / (float)oldValue.Value * WeightLimitScale;
-                            break;
-    
-                        case nameof(MovementSpeedScale):
-                            player.m_walkSpeed = player.m_walkSpeed / (float)oldValue.Value * MovementSpeedScale;
-                            player.m_runSpeed = player.m_runSpeed / (float)oldValue.Value * MovementSpeedScale;
-                            break;
-
-                        case nameof(JumpForceScale):
-                            player.m_jumpForce = player.m_jumpForce / (float)oldValue.Value * JumpForceScale;
-                            break;
+                        
                     }
                 }
             }

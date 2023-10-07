@@ -439,24 +439,7 @@ namespace ValheimVRM
 			return true;
 		}
 	}
-
-	[HarmonyPatch(typeof(Player), "GetStealthFactor")]
-	static class Patch_Player_GetStealthFactor
-	{
-		[HarmonyPostfix]
-		static void Postfix(Player __instance, ref float __result)
-		{
-			string playerName;
-			if (VrmManager.PlayerToName.TryGetValue(__instance, out playerName))
-			{
-				var settings = Settings.GetSettings(playerName);
-				if (settings != null)
-				{
-					__result = Mathf.Clamp01(__result /= settings.StealthScale);
-				}
-			}
-		}
-	}
+	
 
 	// Remove stealth factor check, show stealth hud only if crouching
 	[HarmonyPatch(typeof(Hud), "UpdateStealth")]
@@ -520,6 +503,8 @@ namespace ValheimVRM
 					{
 						var settings = Settings.GetSettings(playerName);
 						attack.m_attackRange *= settings.AttackDistanceScale;
+						
+						//TODO: find out if this should be removed.
 						attack.m_attackHeight *= settings.PlayerHeight / 1.85f;
 						attack.m_attackOffset *= settings.PlayerHeight / 1.85f;
 						
@@ -529,56 +514,9 @@ namespace ValheimVRM
 						//nview.GetZDO().Set(animSpeedID, nview.GetZDO().GetFloat(animSpeedID) * settings.AttackSpeedScale);
 						//var animator = anim.GetField<ZSyncAnimation, Animator>("m_animator");
 						//animator.speed *= settings.AttackSpeedScale;
-
-						switch (attack.m_attackType)
-						{
-							case Attack.AttackType.Area:
-							case Attack.AttackType.Horizontal:
-							case Attack.AttackType.Vertical:
-								attack.m_damageMultiplier *= settings.MeleeDamageScale;
-								break;
-							
-							case Attack.AttackType.Projectile:
-							case Attack.AttackType.TriggerProjectile:
-								attack.m_damageMultiplier *= settings.RangedDamageScale;
-								break;
-						}
+						
 					}
 				}
-			}
-		}
-	}
-
-	[HarmonyPatch(typeof(Player), "GetTotalFoodValue")]
-	static class Patch_Player_GetTotalFoodValue
-	{
-		[HarmonyReversePatch]
-		static void Postfix(Player __instance, out float hp, out float stamina)
-		{
-			float baseHealthScale = 1f;
-			float foodHealthScale = 1f;
-			float baseStaminaScale = 1f;
-			float foodStaminaScale = 1f;
-			
-			string playerName;
-			if (VrmManager.PlayerToName.TryGetValue(__instance, out playerName))
-			{
-				var settings = Settings.GetSettings(playerName);
-				if (settings != null)
-				{
-					baseHealthScale = settings.BaseHealthScale;
-					foodHealthScale = settings.FoodHealthScale;
-					baseStaminaScale = settings.BaseStaminaScale;
-					foodStaminaScale = settings.FoodStaminaScale;
-				}
-			}
-			
-			hp = __instance.m_baseHP * baseHealthScale;
-			stamina = __instance.m_baseStamina * baseStaminaScale;
-			foreach (Player.Food food in __instance.GetFoods())
-			{
-				hp += food.m_health * foodHealthScale;
-				stamina += food.m_stamina * foodStaminaScale;
 			}
 		}
 	}
@@ -623,191 +561,6 @@ namespace ValheimVRM
 		}
 	}
 	
-	[HarmonyPatch(typeof(ItemDrop.ItemData), "GetTooltip", new Type[] {typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float)})]
-	static class Patch_ItemData_GetTooltip
-	{
-		public static float GetFoodHealth(float baseValue, Player player)
-		{
-			string name;
-			if (VrmManager.PlayerToName.TryGetValue(player, out name))
-			{
-				var settings = Settings.GetSettings(name);
-				if (settings != null)
-				{
-					return baseValue * settings.FoodHealthScale;
-				}
-			}
-
-			return baseValue;
-		}
-		
-		public static float GetFoodStamina(float baseValue, Player player)
-		{
-			string name;
-			if (VrmManager.PlayerToName.TryGetValue(player, out name))
-			{
-				var settings = Settings.GetSettings(name);
-				if (settings != null)
-				{
-					return baseValue * settings.FoodStaminaScale;
-				}
-			}
-
-			return baseValue;
-		}
-		
-		public static float GetFoodDuration(float baseValue, Player player)
-		{
-			string name;
-			if (VrmManager.PlayerToName.TryGetValue(player, out name))
-			{
-				var settings = Settings.GetSettings(name);
-				if (settings != null)
-				{
-					return baseValue * settings.DigestionTimeScale;
-				}
-			}
-
-			return baseValue;
-		}
-		
-		[HarmonyTranspiler]
-		static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-		{
-			List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-
-			{
-				int i = instructionList.FindOp(OpCodes.Ldstr, "\n$item_food_health: <color=#ff8080ff>{0}</color>  ($item_current:<color=yellow>{1}</color>)");
-				if (i >= 0)
-				{
-					int j = instructionList.FindOp(OpCodes.Ldfld, Utils.GetField<ItemDrop.ItemData.SharedData>("m_food"), i);
-					if (j >= 0)
-					{
-						instructionList.InsertRange(j + 1, new CodeInstruction[]
-						{
-							new CodeInstruction(OpCodes.Ldloc_0),
-							new CodeInstruction(OpCodes.Call, typeof(Patch_ItemData_GetTooltip).GetMethod("GetFoodHealth"))
-						});
-					}
-				}
-			}
-
-			{
-				int i = instructionList.FindOp(OpCodes.Ldstr, "\n$item_food_stamina: <color=#ffff80ff>{0}</color>  ($item_current:<color=yellow>{1}</color>)");
-				if (i >= 0)
-				{
-					int j = instructionList.FindOp(OpCodes.Ldfld, Utils.GetField<ItemDrop.ItemData.SharedData>("m_foodStamina"), i);
-					if (j >= 0)
-					{
-						instructionList.InsertRange(j + 1, new CodeInstruction[]
-						{
-							new CodeInstruction(OpCodes.Ldloc_0),
-							new CodeInstruction(OpCodes.Call, typeof(Patch_ItemData_GetTooltip).GetMethod("GetFoodStamina"))
-						});
-					}
-				}
-			}
-
-			{
-				int i = instructionList.FindOp(OpCodes.Ldstr, "\n$item_food_duration: <color=orange>{0}</color>");
-				if (i >= 0)
-				{
-					int j = instructionList.FindOp(OpCodes.Ldfld, Utils.GetField<ItemDrop.ItemData.SharedData>("m_foodBurnTime"), i);
-					if (j >= 0)
-					{
-						instructionList.InsertRange(j + 1, new CodeInstruction[]
-						{
-							new CodeInstruction(OpCodes.Ldloc_0),
-							new CodeInstruction(OpCodes.Call, typeof(Patch_ItemData_GetTooltip).GetMethod("GetFoodDuration"))
-						});
-					}
-				}
-			}
-
-			return instructionList;
-		}
-	}
-
-	[HarmonyPatch(typeof(Player), "EatFood")]
-	static class Patch_Player_EatFood
-	{
-		[HarmonyTranspiler]
-		static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-		{
-			var instructionList = new List<CodeInstruction>(instructions);
-
-			for (int i = instructionList.FindOp(OpCodes.Ldstr, " $item_food_health ") - 1; i >= 0; i--)
-			{
-				if (instructionList[i].IsOp(OpCodes.Ldfld, Utils.GetField<ItemDrop.ItemData.SharedData>("m_food")))
-				{
-					instructionList.InsertRange(i + 1, new CodeInstruction[]
-					{
-						new CodeInstruction(OpCodes.Ldarg_0),
-						new CodeInstruction(OpCodes.Call, typeof(Patch_ItemData_GetTooltip).GetMethod("GetFoodHealth"))
-					});
-					
-					break;
-				}
-			}
-			
-			for (int i = instructionList.FindOp(OpCodes.Ldstr, " $item_food_stamina ") - 1; i >= 0; i--)
-			{
-				if (instructionList[i].IsOp(OpCodes.Ldfld, Utils.GetField<ItemDrop.ItemData.SharedData>("m_foodStamina")))
-				{
-					instructionList.InsertRange(i + 1, new CodeInstruction[]
-					{
-						new CodeInstruction(OpCodes.Ldarg_0),
-						new CodeInstruction(OpCodes.Call, typeof(Patch_ItemData_GetTooltip).GetMethod("GetFoodStamina"))
-					});
-					
-					break;
-				}
-			}
-			
-			return instructionList;
-		}
-	}
-	
-	[HarmonyPatch(typeof(Player), "UpdateFood")]
-	static class Patch_Player_UpdateFood
-	{
-		public static float GetDigestionSpeed(float baseValue, Player player)
-		{
-			string name;
-			if (VrmManager.PlayerToName.TryGetValue(player, out name))
-			{
-				var settings = Settings.GetSettings(name);
-				if (settings != null)
-				{
-					return baseValue / settings.DigestionTimeScale;
-				}
-			}
-
-			return baseValue;
-		}
-		
-		[HarmonyTranspiler]
-		static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-		{
-			var instructionList = new List<CodeInstruction>(instructions);
-
-			for (int i = instructionList.FindOp(OpCodes.Ldfld, Utils.GetField<Player.Food>("m_time")) + 1; i < instructionList.Count; i++)
-			{
-				if (instructionList[i].opcode == OpCodes.Ldc_R4 && (float)instructionList[i].operand == 1.0f)
-				{
-					instructionList.InsertRange(i + 1, new CodeInstruction[]
-					{
-						new CodeInstruction(OpCodes.Ldarg_0),
-						new CodeInstruction(OpCodes.Call, typeof(Patch_Player_UpdateFood).GetMethod("GetDigestionSpeed"))
-					});
-					
-					break;
-				}
-			}
-
-			return instructionList;
-		}
-	}
 
 	[HarmonyPatch(typeof(Player), "Awake")]
 	static class Patch_Player_Awake

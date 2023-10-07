@@ -132,16 +132,8 @@ namespace ValheimVRM
 		public void SetToPlayer(Player player)
 		{
 			var settings = Settings.GetSettings(Name);
-			
 			player.m_maxInteractDistance *= settings.InteractionDistanceScale;
-			player.m_maxPlaceDistance *= settings.InteractionDistanceScale;
-			player.m_swimDepth *= settings.SwimDepthScale;
-			player.m_swimSpeed *= settings.SwimSpeedScale;
-			player.m_maxCarryWeight *= settings.WeightLimitScale;
-			player.m_walkSpeed *= settings.MovementSpeedScale;
-			player.m_runSpeed *= settings.MovementSpeedScale;
-			player.m_jumpForce *= settings.JumpForceScale;
-			
+ 
 			var vrmModel = Object.Instantiate(VisualModel);
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";

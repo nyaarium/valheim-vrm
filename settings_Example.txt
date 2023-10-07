@@ -95,37 +95,14 @@ SpringBoneGravityPower=1.0
 // Scale for the equipment in hands
 EquipmentScale=1.0
 
-// Scale for the interaction and build distance
+// Scale for the interaction distance
 InteractionDistanceScale=1.0
 
 // Scale for attack distance
 AttackDistanceScale=1.0
 
-// Scale for melee attacks damage
-MeleeDamageScale=1.0
-
-// Scale for ranged attacks damage
-RangedDamageScale=1.0
-
 // Depth on which your character starts swiming
 SwimDepthScale=1.0
 
-// Scale for your swim speed
-SwimSpeedScale=1.0
 
-// Scale for max health
-BaseHealthScale=1.0
-FoodHealthScale=1.0
 
-// Scale for max stamina
-BaseStaminaScale=1.0
-FoodStaminaScale=1.0
-
-// Scale for weight limit
-WeightLimitScale=1.0
-
-// Scale for movement speed
-MovementSpeedScale=1.0
-
-// Scale for jump force
-JumpForceScale=1.0
