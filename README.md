@@ -3,7 +3,7 @@
 This requires BepInEx to be installed.
 
 ### How to install
-Drag the folders from inside realse (BepInEx,valheim_Data) into your valheim install directory.
+Drag the folders from inside release (BepInEx,valheim_Data) into your valheim install directory.
 the folders are setup to put the files where they need to go.
 
 
