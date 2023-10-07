@@ -119,7 +119,6 @@
       <ManagedPath>$(VALHEIM_INSTALL)\valheim_Data\Managed\</ManagedPath>
       
       <LibsPath>$(VALHEIM_UNITY_LIBS)</LibsPath>
-      <ShadersPath>$(SolutionDir)shaders\</ShadersPath>
       <Pdb2MdbPath>$(SolutionDir)pdb2mdb.exe</Pdb2MdbPath>
       <UnstrippedCorlibPath>$(VALHEIM_INSTALL)\unstripped_corlib\</UnstrippedCorlibPath>
     </PropertyGroup>
@@ -164,7 +163,7 @@
 
     <!-- COPY FILES TO LOCAL VALHIEM -->
     <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ManagedPath)" />
-    <Exec Command="copy &quot;$(ShadersPath)*.*&quot; &quot;$(BepInExPluginPath)&quot;" />
+    <Exec Command="copy &quot;$(SolutionDir)Assets\ValheimVRM.shaders&quot; &quot;$(BepInExPluginPath)ValheimVRM.shaders&quot;" />
 
 
     <!-- DEBUG BUILD STUFF -->
@@ -188,7 +187,7 @@
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;$(ReleasePluginPath)$(TargetFileName)&quot;" />
     
     
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(ShadersPath)*.*&quot; &quot;$(ReleasePluginPath)&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)Assets\ValheimVRM.shaders&quot; &quot;$(ReleasePluginPath)ValheimVRM.shaders&quot;" />
 
  
     <Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(LibFiles)" DestinationFolder="$(ReleaseManagedPath)" />
@@ -201,7 +200,7 @@
 
 
     <!-- Zip for release -->
-    <Exec Command="powershell -command &quot;Compress-Archive -Path '$(ReleasePath)' -DestinationPath '$(SolutionDir)ValheimVRM-$(Version).zip'&quot;" />
+    <Exec Command="powershell -command &quot;Compress-Archive -Path '$(ReleasePath)' -DestinationPath '$(SolutionDir)ValheimVRM-$(Version).zip'&quot; -Force" />
 
 
     
