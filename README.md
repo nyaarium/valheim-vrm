@@ -2,8 +2,8 @@
 
 This requires BepInEx to be installed.
 
-### How to install
-Drag the folders from inside release (BepInEx,valheim_Data) into your valheim install directory.
+### How to install 
+[Downdload](https://github.com/aMidnightNova/ValheimVRM/releases) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
 the folders are setup to put the files where they need to go.
 
 
