@@ -2,7 +2,7 @@
 
 **This mod requires BepInEx to be installed.**
 
-This fork is actively developed and maintained if you need help, want to request features, or found a bug head over to [discord](https://discord.gg/q3wuVMCvXE).
+This fork is actively developed and maintained. If you need help, want to request a feature, or found a bug; Head on over to the [discord](https://discord.gg/q3wuVMCvXE).
 
 ### How to install 
 [Download](https://github.com/aMidnightNova/ValheimVRM/releases/latest) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
