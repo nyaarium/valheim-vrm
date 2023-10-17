@@ -5,7 +5,7 @@
 This fork is actively developed and maintained if you need help, want to request features, or found a bug head over to [discord](https://discord.gg/q3wuVMCvXE).
 
 ### How to install 
-[Download](https://github.com/aMidnightNova/ValheimVRM/releases) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
+[Download](https://github.com/aMidnightNova/ValheimVRM/releases/latest) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
 The folders are setup to put the files where they need to go.
 
 
