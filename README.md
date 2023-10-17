@@ -1,6 +1,8 @@
 # ValheimVRM
 
-This requires BepInEx to be installed.
+**This mod requires BepInEx to be installed.**
+
+This fork is actively developed and maintained if you need help, want to request feature, or found a bug head over to [discord](https://discord.gg/q3wuVMCvXE).
 
 ### How to install 
 [Download](https://github.com/aMidnightNova/ValheimVRM/releases) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
