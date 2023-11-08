@@ -12,7 +12,7 @@ The folders are setup to put the files where they need to go.
 ### Settings
 The name of the character in the game needs to correspond to a VRM and settings file like so.
 
-**Character**: Midnight Nova \
+**Character Name**: Midnight Nova \
 **Settings File**: Midnight Nova_settings.txt \
 **VRM**: Midnight Nova.vrm
 
@@ -21,7 +21,6 @@ The name of the character in the game needs to correspond to a VRM and settings 
 
 You can have Default settings now, to use this;
 
-**Character**: ___Default \
 **Settings File**: ___Default.txt \
 **VRM**: ___Default.vrm
 
