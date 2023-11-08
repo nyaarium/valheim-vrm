@@ -21,7 +21,7 @@ The name of the character in the game needs to correspond to a VRM and settings 
 
 You can have Default settings now, to use this;
 
-**Settings File**: ___Default.txt \
+**Settings File**: settings____Default.txt \
 **VRM**: ___Default.vrm
 
 **NOTE:** settings____Default.txt has 4 underscores, and ___Default.vrm has 3.
