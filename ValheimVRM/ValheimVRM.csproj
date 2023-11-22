@@ -168,7 +168,7 @@
 
     <!-- COPY FILES TO LOCAL VALHIEM -->
     <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ManagedPath)" />
-    <Exec Command="copy &quot;$(SolutionDir)Assets\ValheimVRM.shaders&quot; &quot;$(BepInExPluginPath)UniVrm.shaders&quot;" />
+    <Exec Command="copy &quot;$(SolutionDir)Assets\ValheimVRM.shaders&quot; &quot;$(BepInExPluginPath)ValheimVRM.shaders&quot;" />
 
 
     <!-- DEBUG BUILD STUFF -->
