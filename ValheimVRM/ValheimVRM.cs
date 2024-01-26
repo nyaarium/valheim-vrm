@@ -376,39 +376,42 @@ namespace ValheimVRM
 			}
 		}
 	}
-	// To prevent a NullReferenceException, you should check if vrm is not null before attempting to access its components. Here's the modified code with a null check: var lodGroup = vrm.GetComponent<LODGroup>();
-	// By adding the vrm != null check before accessing components, you should avoid the NullReferenceException. Additionally,
-	// I added a check for lodGroup != null to handle cases where the LODGroup component might be null. You can customize the error handling or logging based on your specific requirements.
-
-    [HarmonyPatch(typeof(Character), "SetVisible")]
-    static class Patch_Character_SetVisible
-    {
-        [HarmonyPostfix]
-        static void Postfix(Character __instance, bool visible)
-        {
-            if (!__instance.IsPlayer()) return;
-
-            if (VrmManager.PlayerToVrmInstance.TryGetValue((Player)__instance, out var vrm) && vrm != null)
-            {
-                var lodGroup = vrm.GetComponent<LODGroup>();
-                if (lodGroup != null)
-                {
-                    if (visible)
-                    {
-                        lodGroup.localReferencePoint = __instance.GetField<Character, Vector3>("m_originalLocalRef");
-                    }
-                    else
-                    {
-                        lodGroup.localReferencePoint = new Vector3(999999f, 999999f, 999999f);
-                    }
-                }
-                else
-                {
-                    // Log or handle the case where LODGroup is null
-                }
-            }
+	
+	[HarmonyPatch(typeof(Character), "SetVisible")]
+	static class Patch_Character_SetVisible
+	{
+		[HarmonyPostfix]
+		static void Postfix(Character __instance, bool visible)
+		{
+			if (!__instance.IsPlayer()) return;
+			// Make sure to perform a null check before accessing VRM components
+			if (VrmManager.PlayerToVrmInstance.TryGetValue((Player)__instance, out var vrm) && vrm != null)
+			{
+				// Avoid reference errors by using a null check for LODGroup
+				var lodGroup = vrm.GetComponent<LODGroup>();
+				if (lodGroup != null)
+				{
+					if (visible)
+					{
+						lodGroup.localReferencePoint = __instance.GetField<Character, Vector3>("m_originalLocalRef");
+					}
+					else
+					{
+						lodGroup.localReferencePoint = new Vector3(999999f, 999999f, 999999f);
+					}
+				}
+				else
+				{
+					// Log or handle the case where LODGroup is null
+					// Example: Debug.LogError("LODGroup is null for VRM instance.");
+				}
+			}
+			else
+			{
+				// Log or handle the case where VRM instance is null
+			}
         }
-    }
+	}
 
     [HarmonyPatch(typeof(Player), "OnDeath")]
 	static class Patch_Player_OnDeath
