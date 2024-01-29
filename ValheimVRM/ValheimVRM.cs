@@ -376,7 +376,7 @@ namespace ValheimVRM
 			}
 		}
 	}
-
+	
 	[HarmonyPatch(typeof(Character), "SetVisible")]
 	static class Patch_Character_SetVisible
 	{
@@ -384,23 +384,36 @@ namespace ValheimVRM
 		static void Postfix(Character __instance, bool visible)
 		{
 			if (!__instance.IsPlayer()) return;
-
-			if (VrmManager.PlayerToVrmInstance.TryGetValue((Player)__instance, out var vrm))
+			// Make sure to perform a null check before accessing VRM components
+			if (VrmManager.PlayerToVrmInstance.TryGetValue((Player)__instance, out var vrm) && vrm != null)
 			{
+				// Avoid reference errors by using a null check for LODGroup
 				var lodGroup = vrm.GetComponent<LODGroup>();
-				if (visible)
+				if (lodGroup != null)
 				{
-					lodGroup.localReferencePoint = __instance.GetField<Character, Vector3>("m_originalLocalRef");
+					if (visible)
+					{
+						lodGroup.localReferencePoint = __instance.GetField<Character, Vector3>("m_originalLocalRef");
+					}
+					else
+					{
+						lodGroup.localReferencePoint = new Vector3(999999f, 999999f, 999999f);
+					}
 				}
 				else
 				{
-					lodGroup.localReferencePoint = new Vector3(999999f, 999999f, 999999f);
+					// Log or handle the case where LODGroup is null
+					// Example: Debug.LogError("LODGroup is null for VRM instance.");
 				}
 			}
-		}
+			else
+			{
+				// Log or handle the case where VRM instance is null
+			}
+        }
 	}
 
-	[HarmonyPatch(typeof(Player), "OnDeath")]
+    [HarmonyPatch(typeof(Player), "OnDeath")]
 	static class Patch_Player_OnDeath
 	{
 		[HarmonyPostfix]

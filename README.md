@@ -8,6 +8,7 @@ This fork is actively developed and maintained. If you need help, want to reques
 [Download](https://github.com/aMidnightNova/ValheimVRM/releases/latest) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
 The folders are setup to put the files where they need to go.
 
+Create a folder named ValheimVRM in the main game directory alongside valheim.exe and place your VRM character inside it.
 
 ### Settings
 The name of the character in the game needs to correspond to a VRM and settings file like so.
