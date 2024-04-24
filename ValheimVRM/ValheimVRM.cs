@@ -16,14 +16,46 @@ namespace ValheimVRM
 	[HarmonyPatch(nameof(Shader.Find))]
 	static class ShaderPatch
 	{
+		 private static readonly Dictionary<string, Shader> ShaderDictionary = new Dictionary<string, Shader>();
+		 
+		 
+		 // im not sure but there might be a bug in Shader.Find?
+		 // its returning null anytime the Standard Shader is searched for.
+		 // Searching though Resources.FindObjectsOfTypeAll<Shader>() shows that standard exists in Resources.
+		 // so the bellow is a work around to find it.
+		 
+		static ShaderPatch()
+		{
+			Shader[] allShaders = Resources.FindObjectsOfTypeAll<Shader>();
+			foreach (Shader shader in allShaders)
+			{
+				if (!ShaderDictionary.ContainsKey(shader.name))
+				{
+					ShaderDictionary.Add(shader.name, shader);
+				}
+			}
+			Debug.Log("[ValheimVRM ShaderPatch] All shaders loaded into ShaderDictionary.");
+		}
+		
+
 		static bool Prefix(ref Shader __result, string name)
 		{
+			
 			if (VRMShaders.Shaders.TryGetValue(name, out var shader))
 			{
+				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in VRMShaders.Shaders");
 				__result = shader;
 				return false;
 			}
 
+			if (ShaderDictionary.TryGetValue(name, out shader))
+			{
+				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in preloaded ShaderDictionary.");
+				__result = shader;
+				return false;
+			}
+
+			Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' NOT FOUND in ShaderDictionary. passing method to original Shader.Find.");
 			return true;
 		}
 	}
@@ -34,7 +66,19 @@ namespace ValheimVRM
 
 		public static void Initialize()
 		{
-			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"ValheimVRM.shaders");
+			var bundlePath = "";
+			if (Settings.globalSettings.UseShaderBundle == "current")
+			{
+				bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVrm.shaders");
+			} else if (Settings.globalSettings.UseShaderBundle == "old")
+			{
+				bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"OldUniVrm.shaders");
+			}
+			else
+			{
+				Debug.LogError("[ValheimVRM] Invalid UseShaderBundle; old, current");
+			}
+			
 			if (File.Exists(bundlePath))
 			{
 				var assetBundle = AssetBundle.LoadFromFile(bundlePath);
@@ -135,10 +179,29 @@ namespace ValheimVRM
 			}
 			else
 			{
-				var shader = Shader.Find("Custom/Player");
+				
+				Shader foundShader = Shader.Find("Custom/Player");
+		        
+				// im not sure but there might be a bug in Shader.Find
+				// its returning null, but the shader exists in resources.
+				// so this is a bit of a work around to find it.
+		        
+				if (foundShader == null)
+				{
+					Shader[] allShaders = Resources.FindObjectsOfTypeAll<Shader>();
+					foreach (Shader shader in allShaders)
+					{
+						if (shader.name == "Custom/Player")
+						{
+							foundShader = shader;
+							break;
+						}
+					}
+				}
+	 
 				foreach (var mat in materials)
 				{
-					if (mat.shader == shader) continue;
+					if (mat.shader == foundShader) continue;
 
 					var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
 
@@ -162,7 +225,7 @@ namespace ValheimVRM
 					}
 
 					var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
-					mat.shader = shader;
+					mat.shader = foundShader;
 
 					mat.SetTexture("_MainTex", tex);
 					mat.SetTexture("_SkinBumpMap", bumpMap);
