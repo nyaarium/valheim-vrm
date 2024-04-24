@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <Version>1.2.3</Version>
+    <Version>1.2.4</Version>
     <TargetFramework>net471</TargetFramework>
   </PropertyGroup>
 
@@ -168,8 +168,8 @@
 
     <!-- COPY FILES TO LOCAL VALHIEM -->
     <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ManagedPath)" />
-    <Exec Command="copy &quot;$(SolutionDir)Assets\ValheimVRM.shaders&quot; &quot;$(BepInExPluginPath)ValheimVRM.shaders&quot;" />
-
+    <Exec Command="copy &quot;$(SolutionDir)Assets\UniVrm.shaders&quot; &quot;$(BepInExPluginPath)UniVrm.shaders&quot;" />
+    <Exec Command="copy &quot;$(SolutionDir)Assets\OldUniVrm.shaders&quot; &quot;$(BepInExPluginPath)OldUniVrm.shaders&quot;" />
 
     <!-- DEBUG BUILD STUFF -->
     <Exec Condition=" '$(Configuration)' == 'Debug' " Command="&quot;$(Pdb2MdbPath)&quot; &quot;$(TargetPath)&quot;" />
@@ -194,7 +194,8 @@
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;$(ReleasePluginPath)$(TargetFileName)&quot;" />
 
 
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)Assets\ValheimVRM.shaders&quot; &quot;$(ReleasePluginPath)ValheimVRM.shaders&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)Assets\UniVrm.shaders&quot; &quot;$(ReleasePluginPath)UniVrm.shaders&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)Assets\OldUniVrm.shaders&quot; &quot;$(ReleasePluginPath)OldUniVrm.shaders&quot;" />
 
 
     <Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(LibFiles)" DestinationFolder="$(ReleaseManagedPath)" />
