@@ -185,6 +185,8 @@
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="if exist &quot;$(ReleasePath)&quot; rd /s /q &quot;$(ReleasePath)&quot;" />
     
     <MakeDir Directories="$(ReleasePath)" Condition=" '$(Configuration)' == 'Release' " />
+    <MakeDir Directories="$(ReleasePath)ValheimVRM\" Condition=" '$(Configuration)' == 'Release' " />
+    
     <MakeDir Directories="$(ReleaseManagedPath)" Condition=" '$(Configuration)' == 'Release' " />
     <MakeDir Directories="$(ReleasePluginPath)" Condition=" '$(Configuration)' == 'Release' " />
 
@@ -201,9 +203,10 @@
     <Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(LibFiles)" DestinationFolder="$(ReleaseManagedPath)" />
 
     <!--  Copy Other Project files  -->
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings____Default.txt&quot; &quot;$(ReleasePath)settings___Default.txt&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings_Example.txt&quot; &quot;$(ReleasePath)settings_Example.txt&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)README.md&quot; &quot;$(ReleasePath)README.md&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings____Default.txt&quot; &quot;$(ReleasePath)ValheimVRM\settings___Default.txt&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings_Example.txt&quot; &quot;$(ReleasePath)ValheimVRM\settings_Example.txt&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)global_settings.txt&quot; &quot;$(ReleasePath)ValheimVRM\global_settings.txt&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)README.md&quot; &quot;$(ReleasePath)ValheimVRM\README.md&quot;" />
 
 
 
