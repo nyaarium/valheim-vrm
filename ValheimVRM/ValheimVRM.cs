@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using UniGLTF;
+using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using VRM;
 using Object = UnityEngine.Object;
@@ -98,8 +98,8 @@ namespace ValheimVRM
 		public static Dictionary<Player, string> PlayerToName = new Dictionary<Player, string>();
 		public static Dictionary<string, VRM> VrmDic = new Dictionary<string, VRM>();
 		
-		public static VRM RegisterVrm(VRM vrm, LODGroup sampleLODGroup)
-		{
+		public static VRM RegisterVrm(VRM vrm, LODGroup sampleLODGroup, Player player)
+		{ 
 			if (vrm.VisualModel == null) return null;
 			
 			foreach (var registered in VrmDic)
@@ -112,7 +112,7 @@ namespace ValheimVRM
 					return null;
 				}
 			}
-			
+			Debug.Log("______________________ Vrm Chain 5");
 			if (VrmDic.ContainsKey(vrm.Name))
 			{
 				var existing = VrmDic[vrm.Name];
@@ -146,7 +146,7 @@ namespace ValheimVRM
 			//[Error: Unity Log] _MetalGlossiness: Range
 
 			// Shader replacement
-			var brightness = Settings.GetSettings(vrm.Name).ModelBrightness;
+			var settings = Settings.GetSettings(vrm.Name);
 			var materials = new List<Material>();
 			foreach (var smr in vrm.VisualModel.GetComponentsInChildren<SkinnedMeshRenderer>())
 			{
@@ -162,86 +162,14 @@ namespace ValheimVRM
 					if (!materials.Contains(mat)) materials.Add(mat);
 				}
 			}
+			Debug.Log("______________________ Vrm Chain 6");
 
-			if (Settings.GetSettings(vrm.Name).UseMToonShader)
-			{
-				foreach (var mat in materials)
-				{
-					if (mat.HasProperty("_Color"))
-					{
-						var color = mat.GetColor("_Color");
-						color.r *= brightness;
-						color.g *= brightness;
-						color.b *= brightness;
-						mat.SetColor("_Color", color);
-					}
-				}
-			}
-			else
-			{
-				
-				Shader foundShader = Shader.Find("Custom/Player");
-		        
-				// im not sure but there might be a bug in Shader.Find
-				// its returning null, but the shader exists in resources.
-				// so this is a bit of a work around to find it.
-		        
-				if (foundShader == null)
-				{
-					Shader[] allShaders = Resources.FindObjectsOfTypeAll<Shader>();
-					foreach (Shader shader in allShaders)
-					{
-						if (shader.name == "Custom/Player")
-						{
-							foundShader = shader;
-							break;
-						}
-					}
-				}
-	 
-				foreach (var mat in materials)
-				{
-					if (mat.shader == foundShader) continue;
-
-					var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
-
-					var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-					Texture2D tex = mainTex;
-					if (mainTex != null)
-					{
-						tex = new Texture2D(mainTex.width, mainTex.height);
-						var colors = mainTex.GetPixels();
-						for (var i = 0; i < colors.Length; i++)
-						{
-							var col = colors[i] * color;
-							float h, s, v;
-							Color.RGBToHSV(col, out h, out s, out v);
-							v *= brightness;
-							colors[i] = Color.HSVToRGB(h, s, v);
-							colors[i].a = col.a;
-						}
-						tex.SetPixels(colors);
-						tex.Apply();
-					}
-
-					var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
-					mat.shader = foundShader;
-
-					mat.SetTexture("_MainTex", tex);
-					mat.SetTexture("_SkinBumpMap", bumpMap);
-					mat.SetColor("_SkinColor", color);
-					mat.SetTexture("_ChestTex", tex);
-					mat.SetTexture("_ChestBumpMap", bumpMap);
-					mat.SetTexture("_LegsTex", tex);
-					mat.SetTexture("_LegsBumpMap", bumpMap);
-					mat.SetFloat("_Glossiness", 0.2f);
-					mat.SetFloat("_MetalGlossiness", 0.0f);
-					
-				}
-			}
+			player.StartCoroutine(ProcessMaterialsCoroutine(vrm, materials, settings));
+        
+			Debug.Log("______________________ Vrm Chain 7");
 
 			var lodGroup = vrm.VisualModel.AddComponent<LODGroup>();
-			if (Settings.GetSettings(vrm.Name).EnablePlayerFade)
+			if (settings.EnablePlayerFade)
 			{
 				lodGroup.SetLODs(new LOD[]
 				{
@@ -249,15 +177,87 @@ namespace ValheimVRM
 				});
 			}
 			lodGroup.RecalculateBounds();
-			
+			Debug.Log("______________________ Vrm Chain 8");
+
 			lodGroup.fadeMode = sampleLODGroup.fadeMode;
 			lodGroup.animateCrossFading = sampleLODGroup.animateCrossFading;
 
 			vrm.VisualModel.SetActive(false);
+			Debug.Log("______________________ Vrm Chain 9");
 
-			return vrm;
-		}
-	}
+        return vrm;
+    }
+
+    public static IEnumerator ProcessMaterialsCoroutine(VRM vrm, List<Material> materials, Settings.VrmSettingsContainer settings)
+    {
+	    
+        Shader foundShader = Shader.Find("Custom/Player");
+
+        foreach (var mat in materials)
+        {
+	        Debug.Log("______________________ Vrm Chain 6.1");
+            if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
+            {
+                var color = mat.GetColor("_Color");
+                color.r *= settings.ModelBrightness;
+                color.g *= settings.ModelBrightness;
+                color.b *= settings.ModelBrightness;
+                mat.SetColor("_Color", color);
+            }
+            else if(settings.AttemptTextureFix)
+            {
+                if (mat.shader != foundShader)
+                {
+                    var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+
+                    var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
+                    Texture2D tex = mainTex;
+                    
+                    if (mainTex != null)
+                    {
+	                    tex = new Texture2D(mainTex.width, mainTex.height);
+                        var pixels = mainTex.GetPixels();
+                        
+                        for (int i = 0; i < pixels.Length; i++)
+                        {
+                            var col = pixels[i] * color;
+                            Color.RGBToHSV(col, out float h, out float s, out float v);
+                            v *= settings.ModelBrightness;
+                            pixels[i] = Color.HSVToRGB(h, s, v, true);
+                            pixels[i].a = col.a;
+
+                            if (i % 25000 == 0)
+                            {
+	                            yield return null;
+                            }
+	                           
+                        }
+                        tex.SetPixels(pixels);
+                        tex.Apply();
+
+                    }
+                    
+                    var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
+                    mat.shader = foundShader;
+
+                    mat.SetTexture("_MainTex", tex);
+                    mat.SetTexture("_SkinBumpMap", bumpMap);
+                    mat.SetColor("_SkinColor", color);
+                    mat.SetTexture("_ChestTex", tex);
+                    mat.SetTexture("_ChestBumpMap", bumpMap);
+                    mat.SetTexture("_LegsTex", tex);
+                    mat.SetTexture("_LegsBumpMap", bumpMap);
+                    mat.SetFloat("_Glossiness", 0.2f);
+                    mat.SetFloat("_MetalGlossiness", 0.0f);
+                }
+            }
+
+            yield return null; // Yield after processing each material to maintain responsiveness
+        }
+        Debug.Log("[ValheimVRM] Material processing completed.");
+    }
+}
+
 
 	[HarmonyPatch(typeof(VisEquipment), "UpdateLodgroup")]
 	static class Patch_VisEquipment_UpdateLodgroup
@@ -425,7 +425,7 @@ namespace ValheimVRM
 			
 
 				var ragAnim = ragdoll.gameObject.AddComponent<Animator>();
-				ragAnim.keepAnimatorControllerStateOnDisable = true;
+				ragAnim.keepAnimatorStateOnDisable = true;
 				ragAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
 				var orgAnim = (player.GetField<Player, Animator>("m_animator"));
@@ -717,33 +717,44 @@ namespace ValheimVRM
 					{
 						if (File.Exists(path))
 						{
-							var vrmVisual = VRM.ImportVisual(path, settings.ModelScale);
-							if (vrmVisual != null)
+							
+							
+							if (localPlayerName == playerName)
 							{
-								vrm = new VRM(vrmVisual, playerName);
-								vrm = VrmManager.RegisterVrm(vrm, __instance.GetComponentInChildren<LODGroup>());
-								if (vrm != null)
+								var bytes = File.ReadAllBytes(path);
+								var vrmVisual  =  VRM.ImportVisual(bytes, path, settings.ModelScale);
+								if (vrmVisual != null)
 								{
-									vrm.Src = File.ReadAllBytes(path);
-									vrm.RecalculateSrcBytesHash();
+									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName );
 								}
+				
 							}
+							else
+							{
+								__instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, path, settings.ModelScale, settingsUpdated, settings, false));
+							}
+							
+							
 						}
 						else if (File.Exists(sharedPath))
-						{
-							var vrmVisual = VRM.ImportVisual(sharedPath, settings.ModelScale);
-							if (vrmVisual != null)
+						{ // isShared true
+							
+							if (localPlayerName == playerName) // i do not think sharing is implmented, even if it is, i dont think there can be a local player instance here
+							                                   // or at least shouldn't be.
 							{
-								vrm = new VRM(vrmVisual, playerName);
-								vrm = VrmManager.RegisterVrm(vrm, __instance.GetComponentInChildren<LODGroup>());
-								if (vrm != null)
+								var bytes = File.ReadAllBytes(sharedPath);
+								var vrmVisual  =  VRM.ImportVisual(bytes, sharedPath, settings.ModelScale);
+								if (vrmVisual != null)
 								{
-									vrm.Src = File.ReadAllBytes(sharedPath);
-									vrm.RecalculateSrcBytesHash();
-
-									vrm.Source = VRM.SourceType.Shared;
+									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName, true );
 								}
 							}
+							else
+							{
+								__instance.StartCoroutine(LoadVrm(__instance, playerName,localPlayerName, sharedPath, settings.ModelScale, settingsUpdated, settings,true));
+
+							}
+							
 						}
 						else
 						{ //default character stuff
@@ -753,19 +764,24 @@ namespace ValheimVRM
 
 								if (File.Exists(defaultPath))
 								{
-									var vrmVisual = VRM.ImportVisual(defaultPath, settings.ModelScale);
-									if (vrmVisual != null)
+									
+									if (localPlayerName == playerName)
 									{
-										vrm = new VRM(vrmVisual, "___Default");
-										vrm = VrmManager.RegisterVrm(vrm, __instance.GetComponentInChildren<LODGroup>());
-										if (vrm != null)
+										var bytes = File.ReadAllBytes(defaultPath);
+										var vrmVisual  =  VRM.ImportVisual(bytes, defaultPath, settings.ModelScale);
+										if (vrmVisual != null)
 										{
-											vrm.Src = File.ReadAllBytes(defaultPath);
-											vrm.RecalculateSrcBytesHash();
+											vrm = CreateVrm(vrmVisual, __instance, bytes, playerName);
 										}
+				
 									}
+									else
+									{
+										__instance.StartCoroutine(LoadVrm(__instance, "___Default", localPlayerName, defaultPath, settings.ModelScale, settingsUpdated, settings, false));
+									}
+									
+									
 								}
-		
 							}
 							else
 							{
@@ -783,19 +799,104 @@ namespace ValheimVRM
 				else
 				{
 					Debug.LogError("Settings are still null");
-
 				}
 
-				if (vrm != null)
-				{
-                    if (settingsUpdated)
-					{
-						vrm.RecalculateSettingsHash();
-					}
-						
-					vrm.SetToPlayer(__instance);
-				}
+				SetVrm(__instance, vrm, settingsUpdated);
 			}
 		}
+
+		private static void SetVrm(Player player, VRM vrm, bool settingsUpdated)
+		{
+			if (vrm != null)
+			{
+				if (settingsUpdated)
+				{
+					vrm.RecalculateSettingsHash();
+				}
+ 
+				Debug.LogError("______________________ vrm.SetToPlayer(__instance);");
+
+				player.StartCoroutine(vrm.SetToPlayer(player));
+			}
+		}
+		
+		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, bool isShared = false)
+		{
+			VRM vrm = new VRM(vrmVisual, name);
+			Debug.Log("______________________ Vrm Chain 4");
+			vrm = VrmManager.RegisterVrm(vrm, player.GetComponentInChildren<LODGroup>(), player);
+			if (vrm != null)
+			{
+				vrm.Src = bytes;
+				vrm.RecalculateSrcBytesHash();
+				if (isShared)
+				{
+					vrm.Source = VRM.SourceType.Shared;
+				}
+			}
+			
+			return vrm;
+		}
+		
+		
+		private static IEnumerator LoadVrm(Player player, string playerName, string localPlayerName, string path, float scale, bool settingsUpdated, Settings.VrmSettingsContainer settings, bool isShared = false)
+		{
+			Debug.Log("______________________ Vrm Chain 1");
+			Task<byte[]> bytesTask = Task.Run(() => File.ReadAllBytes(path));
+			
+			while (!bytesTask.IsCompleted)
+			{
+				yield return null;
+			}
+			Debug.Log("______________________ Vrm Chain 2");
+			if (bytesTask.IsFaulted)
+			{
+				Debug.LogError($"Error loading VRM: {bytesTask.Exception.Flatten().InnerException}");
+				yield break;
+			}
+			
+			yield return player.StartCoroutine(VRM.ImportVisualAsync(bytesTask.Result, path, settings.ModelScale, loadedRoot =>
+			{
+				if (loadedRoot != null)
+				{
+					var vrm = CreateVrm(loadedRoot, player, bytesTask.Result, playerName, isShared);
+					if (vrm != null)
+					{
+						SetVrm(player, vrm, settingsUpdated);
+					}
+				}
+			}));
+
+			// var loadTask = VRM.ImportVisualAsync(bytesTask.Result, path, settings.ModelScale);
+			//
+			//
+			// while (!loadTask.IsCompleted)
+			// {
+			// 	yield return null;
+			// }
+			// Debug.Log("______________________ Vrm Chain 2");
+			// if (loadTask.IsFaulted)
+			// {
+			// 	Debug.LogError($"Error loading VRM: {loadTask.Exception.Flatten().InnerException}");
+			// 	yield break;
+			// }
+			//
+			//
+			// if (loadTask.Result != null)
+			// {
+			// 	var vrm = CreateVrm(loadTask.Result, player, bytesTask.Result, playerName, isShared);
+			// 	if (vrm != null)
+			// 	{
+			// 		SetVrm(player, vrm, settingsUpdated);
+			// 	}
+			// }
+			
+		}
+
+ 
+
+		
+ 
+
 	}
 }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <Version>1.2.4</Version>
+    <Version>1.3</Version>
     <TargetFramework>net471</TargetFramework>
   </PropertyGroup>
 
@@ -203,9 +203,9 @@
     <Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(LibFiles)" DestinationFolder="$(ReleaseManagedPath)" />
 
     <!--  Copy Other Project files  -->
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings____Default.txt&quot; &quot;$(ReleasePath)ValheimVRM\settings___Default.txt&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings_Example.txt&quot; &quot;$(ReleasePath)ValheimVRM\settings_Example.txt&quot;" />
-    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)global_settings.txt&quot; &quot;$(ReleasePath)ValheimVRM\global_settings.txt&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings____Default.txt.example&quot; &quot;$(ReleasePath)ValheimVRM\settings___Default.txt.example&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)settings_Example.txt.example&quot; &quot;$(ReleasePath)ValheimVRM\settings_Example.txt.example&quot;" />
+    <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)global_settings.txt.example&quot; &quot;$(ReleasePath)ValheimVRM\global_settings.txt.example&quot;" />
     <Exec Condition=" '$(Configuration)' == 'Release' " Command="copy &quot;$(SolutionDir)README.md&quot; &quot;$(ReleasePath)ValheimVRM\README.md&quot;" />
 
 
