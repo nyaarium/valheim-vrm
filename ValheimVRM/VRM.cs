@@ -1,14 +1,20 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
+using System.Collections;
+using System.Diagnostics;
 using HarmonyLib;
 using UniGLTF;
 using UnityEngine;
 using VRM;
+using VRMShaders;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
+
 
 namespace ValheimVRM
 {
-    public class VRM
+    public class VRM 
 	{
 		public enum SourceType
 		{
@@ -39,63 +45,57 @@ namespace ValheimVRM
 
 		public void RecalculateSrcBytesHash()
 		{
-			using (var md5 = System.Security.Cryptography.MD5.Create())
+			Task.Run(() =>
 			{
-				SrcHash = md5.ComputeHash(Src);
-			}
+				using (var md5 = System.Security.Cryptography.MD5.Create())
+				{
+					var hash = md5.ComputeHash(Src);
+					lock (this)
+					{
+						SrcHash = hash;
+					}
+				}
+			});
 		}
+
+
 
 		public void RecalculateSettingsHash()
 		{
-			using (var md5 = System.Security.Cryptography.MD5.Create())
+			Task.Run(() =>
 			{
-				byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(Settings.GetSettings(Name).ToStringDiffOnly());
-				SettingsHash = md5.ComputeHash(inputBytes);
-			}
+				using (var md5 = System.Security.Cryptography.MD5.Create())
+				{
+					byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(Settings.GetSettings(Name).ToStringDiffOnly());
+					
+					lock (this)
+					{
+						SettingsHash =  md5.ComputeHash(inputBytes);;
+					}
+				}
+			});
 		}
-		
-		public static GameObject ImportVisual(string path, float scale)
+		public class Timer : IDisposable
 		{
-			Debug.Log("[ValheimVRM] loading vrm from file, " + new FileInfo(path).Length + " bytes");
-			Debug.Log("[ValheimVRM] vrm file path: " + path);
-			
-			try
+			private Stopwatch stopwatch;
+			private string name;
+
+			public Timer(string name)
 			{
-				var data = new GlbFileParser(path).Parse();
-				var vrm = new VRMData(data);
-				var context = new VRMImporterContext(vrm);
-				var loaded = default(RuntimeGltfInstance);
-				
-				try
-				{
-					loaded = context.Load();
-				}
-				catch (TypeLoadException ex)
-				{
-					Debug.LogError("Failed to load type: " + ex.TypeName);
-					Debug.LogError(ex);
-				}
-				
-				loaded.ShowMeshes();
-
-				loaded.Root.transform.localScale = Vector3.one * scale;
-
-				Debug.Log("[ValheimVRM] VRM read successful");
-
-				return loaded.Root;
-			}
-			catch (Exception ex)
-			{
-				Debug.LogError(ex);
+				this.name = name;
+				this.stopwatch = Stopwatch.StartNew();
 			}
 
-			return null;
+			public void Dispose()
+			{
+				stopwatch.Stop();
+				Debug.Log($"{name} took {stopwatch.ElapsedMilliseconds} ms");
+			}
 		}
 
 		public static GameObject ImportVisual(byte[] buf, string path, float scale)
 		{
-			Debug.Log("[ValheimVRM] loading vrm from memory, " + buf.Length + " bytes");
-			
+			Debug.Log("[ValheimVRM] loading vrm: " + buf.Length + " bytes");
 			try
 			{
 				var data = new GlbBinaryParser(buf, path).Parse();
@@ -112,9 +112,7 @@ namespace ValheimVRM
 					Debug.LogError("Failed to load type: " + ex.TypeName);
 					Debug.LogError(ex);
 				}
-				
 				loaded.ShowMeshes();
-
 				loaded.Root.transform.localScale = Vector3.one * scale;
 
 				Debug.Log("[ValheimVRM] VRM read successful");
@@ -129,8 +127,88 @@ namespace ValheimVRM
 			return null;
 		}
 		
-		public void SetToPlayer(Player player)
+ 
+
+		public static IEnumerator ImportVisualAsync(byte[] buf, string path, float scale, Action<GameObject> onCompleted)
 		{
+ 
+			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
+
+			var data = new GlbBinaryParser(buf, path).Parse();
+			yield return null;
+
+			var vrm = new VRMData(data);
+			yield return null;
+
+			
+			var context = new VRMImporterContext(vrm, null, new TextureDeserializerAsync());
+ 
+			//var loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f), name => new Timer(name));					
+			var loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));					
+			while (!loader.IsCompleted)
+			{
+				yield return new WaitUntil(() => loader.IsCompleted);
+			}
+			try
+			{
+				
+				var loaded = loader.Result;
+			
+				loaded.ShowMeshes();
+
+				loaded.Root.transform.localScale = Vector3.one * scale;
+				Debug.Log("[ValheimVRM] VRM read successful");
+				onCompleted(loaded.Root);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError("Error during VRM loading: " + ex);
+			}
+			
+			
+ 	
+		}
+		
+		public static async Task<GameObject> ImportVisualAsync(byte[] buf, string path, float scale)
+		{
+			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
+			
+			GltfData data = new GlbBinaryParser(buf, path).Parse();
+
+			var vrm = new VRMData(data);
+			
+			RuntimeGltfInstance loaded;
+			
+			using(VRMImporterContext loader = new VRMImporterContext(vrm))
+			{
+				loaded = await loader.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));
+			}
+
+			try
+			{
+				loaded.ShowMeshes();
+				loaded.Root.transform.localScale = Vector3.one * scale;
+				Debug.Log("[ValheimVRM] VRM read successful");
+
+				return loaded.Root;
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError("Error during VRM loading: " + ex);
+			}
+
+			return null;
+		}
+		
+ 
+		public IEnumerator SetToPlayer(Player player)
+		{
+			var animator = player.GetComponentInChildren<Animator>();
+
+			var vrmController = player.GetComponent<VrmController>();
+			
+			
+			
 			var settings = Settings.GetSettings(Name);
 			player.m_maxInteractDistance *= settings.InteractionDistanceScale;
  
@@ -138,61 +216,107 @@ namespace ValheimVRM
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";
 			vrmModel.SetActive(true);
-			player.GetComponent<VrmController>().visual = vrmModel;
+			vrmController.visual = vrmModel;
 
-			var oldModel = player.GetComponentInChildren<Animator>().transform.parent.Find("VRM_Visual");
+			var oldModel = animator.transform.parent.Find("VRM_Visual");
 			if (oldModel != null)
 			{
 				Object.Destroy(oldModel);
 			}
 			
-			vrmModel.transform.SetParent(player.GetComponentInChildren<Animator>().transform.parent, false);
+			vrmModel.transform.SetParent(animator.transform.parent, false);;
 
 			float newHeight = settings.PlayerHeight;
 			float newRadius = settings.PlayerRadius;
 
-			var collider = player.gameObject.GetComponent<CapsuleCollider>();
+			var rigidBody = player.GetComponent<Rigidbody>();
+			var collider = player.GetComponent<CapsuleCollider>();
+			
 			collider.height = newHeight;
 			collider.radius = newRadius;
 			collider.center = new Vector3(0, newHeight / 2, 0);
-
-			player.GetComponent<Rigidbody>().centerOfMass = collider.center;
+			
+			
+			rigidBody.centerOfMass = collider.center;
+			
+			yield return null;
 
 			foreach (var smr in player.GetVisual().GetComponentsInChildren<SkinnedMeshRenderer>())
 			{
 				smr.forceRenderingOff = true;
 				smr.updateWhenOffscreen = true;
+				yield return null;
 			}
 
 			var orgAnim = AccessTools.FieldRefAccess<Player, Animator>(player, "m_animator");
-			orgAnim.keepAnimatorControllerStateOnDisable = true;
+			orgAnim.keepAnimatorStateOnDisable = true;
 			orgAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+			yield return null;
 
 			vrmModel.transform.localPosition = orgAnim.transform.localPosition;
 
 			// アニメーション同期
-			if (vrmModel.GetComponent<VRMAnimationSync>() == null) vrmModel.AddComponent<VRMAnimationSync>().Setup(orgAnim, settings, false);
-			else vrmModel.GetComponent<VRMAnimationSync>().Setup(orgAnim, settings, false);
+
+			var animationSync = vrmModel.GetComponent<VRMAnimationSync>();
+			
+			if (animationSync == null)
+			{
+				animationSync = vrmModel.AddComponent<VRMAnimationSync>();
+				animationSync.Setup(orgAnim, settings, false);
+			}
+			else
+			{
+				animationSync.Setup(orgAnim, settings, false);
+			}
+			yield return null;
 
 			// カメラ位置調整
 			if (settings.FixCameraHeight)
 			{
-				var vrmEye = vrmModel.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.LeftEye);
-				if (vrmEye == null) vrmEye = vrmModel.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.Head);
-				if (vrmEye == null) vrmEye = vrmModel.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.Neck);
+				var vrmEye = animator.GetBoneTransform(HumanBodyBones.LeftEye);
+					
+				if (vrmEye == null)
+				{
+					vrmEye = animator.GetBoneTransform(HumanBodyBones.Head);
+				}
+
+				if (vrmEye == null)
+				{
+					vrmEye = animator.GetBoneTransform(HumanBodyBones.Neck);
+				}
+				
 				if (vrmEye != null)
 				{
-					if (player.gameObject.GetComponent<VRMEyePositionSync>() == null) player.gameObject.AddComponent<VRMEyePositionSync>().Setup(vrmEye);
-					else player.gameObject.GetComponent<VRMEyePositionSync>().Setup(vrmEye);
+					var vrmEyePostSync = player.gameObject.GetComponent<VRMEyePositionSync>();
+					if ( vrmEyePostSync == null)
+					{
+						vrmEyePostSync = player.gameObject.AddComponent<VRMEyePositionSync>();
+						vrmEyePostSync.Setup(vrmEye);
+					}
+					else
+					{
+						vrmEyePostSync.Setup(vrmEye);
+					}
 				}
 			}
+			yield return null;
 
 			// MToonの場合環境光の影響をカラーに反映する
 			if (settings.UseMToonShader)
 			{
-				if (vrmModel.GetComponent<MToonColorSync>() == null) vrmModel.AddComponent<MToonColorSync>().Setup(vrmModel);
-				else vrmModel.GetComponent<MToonColorSync>().Setup(vrmModel);
+				var mToonColorSync = vrmModel.GetComponent<MToonColorSync>();
+
+				if (mToonColorSync == null)
+				{
+					mToonColorSync = vrmModel.AddComponent<MToonColorSync>();
+					mToonColorSync.Setup(vrmModel);
+				}
+				else
+				{
+					mToonColorSync.Setup(vrmModel);
+				}
 			}
+			yield return null;
 
 			// SpringBone設定
 			foreach (var springBone in vrmModel.GetComponentsInChildren<VRMSpringBone>())
@@ -201,6 +325,7 @@ namespace ValheimVRM
 				springBone.m_gravityPower *= settings.SpringBoneGravityPower;
 				springBone.m_updateType = VRMSpringBone.SpringBoneUpdateType.FixedUpdate;
 				springBone.m_center = null;
+				yield return null;
 			}
 			
 			player.GetComponent<VrmController>().ReloadSpringBones();

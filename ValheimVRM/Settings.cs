@@ -242,6 +242,8 @@ namespace ValheimVRM
             public float InteractionDistanceScale = 1.0f;
             public float SwimDepthScale = 1.0f;
 
+            public bool AttemptTextureFix = false;
+
 
 
 

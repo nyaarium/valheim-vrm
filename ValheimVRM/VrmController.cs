@@ -7,6 +7,7 @@ using CloudinaryDotNet;
 using UnityEngine;
 using VRM;
 using Random = UnityEngine.Random;
+using System.Threading.Tasks;
 
 namespace ValheimVRM
 {
@@ -544,8 +545,10 @@ namespace ValheimVRM
 						var scale = settings.ModelScale;
 
 						byte[] vrmBytes = process.GetVrmData();
+						// GameObject go = new GameObject("VRMGameObject");
+						// VRM newVrm = go.AddComponent<VRM>().Setup(await VRM.ImportVisualAsync(process.GetVrmData(), vrmPath, scale), vrmName); 
 						VRM newVrm = new VRM(VRM.ImportVisual(process.GetVrmData(), vrmPath, scale), vrmName);
-						newVrm = VrmManager.RegisterVrm(newVrm, player.GetComponentInChildren<LODGroup>());
+						newVrm = VrmManager.RegisterVrm(newVrm, player.GetComponentInChildren<LODGroup>(), player);
 						if (newVrm != null)
 						{
 							newVrm.Source = VRM.SourceType.Shared;
@@ -560,8 +563,7 @@ namespace ValheimVRM
 							{
 								newVrm.RecalculateSettingsHash();
 							}
-							
-							newVrm.SetToPlayer(player);
+							player.StartCoroutine(newVrm.SetToPlayer(player));
 						}
 					}
 

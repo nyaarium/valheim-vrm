@@ -63,6 +63,10 @@ StaffSkeletonPos=(0, 0, 0)
 // VRM model brightness
 ModelBrightness=0.8
 
+// This will process and turn textures into standard textures. it will take some time, like 20 seconds or so if your avatar has a lot of textures.
+// cannot be used at the same time as UseMToonShader, and will override the UseMToonShader setting
+AttemptTextureFix=true
+
 // Adjust the camera position to the height of the VRM model
 FixCameraHeight=true
 
