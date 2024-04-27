@@ -112,7 +112,7 @@ namespace ValheimVRM
 					return null;
 				}
 			}
-			Debug.Log("______________________ Vrm Chain 5");
+ 
 			if (VrmDic.ContainsKey(vrm.Name))
 			{
 				var existing = VrmDic[vrm.Name];
@@ -162,11 +162,10 @@ namespace ValheimVRM
 					if (!materials.Contains(mat)) materials.Add(mat);
 				}
 			}
-			Debug.Log("______________________ Vrm Chain 6");
+
 
 			player.StartCoroutine(ProcessMaterialsCoroutine(vrm, materials, settings));
-        
-			Debug.Log("______________________ Vrm Chain 7");
+ 
 
 			var lodGroup = vrm.VisualModel.AddComponent<LODGroup>();
 			if (settings.EnablePlayerFade)
@@ -177,15 +176,13 @@ namespace ValheimVRM
 				});
 			}
 			lodGroup.RecalculateBounds();
-			Debug.Log("______________________ Vrm Chain 8");
 
 			lodGroup.fadeMode = sampleLODGroup.fadeMode;
 			lodGroup.animateCrossFading = sampleLODGroup.animateCrossFading;
 
 			vrm.VisualModel.SetActive(false);
-			Debug.Log("______________________ Vrm Chain 9");
 
-        return vrm;
+			return vrm;
     }
 
     public static IEnumerator ProcessMaterialsCoroutine(VRM vrm, List<Material> materials, Settings.VrmSettingsContainer settings)
@@ -195,7 +192,7 @@ namespace ValheimVRM
 
         foreach (var mat in materials)
         {
-	        Debug.Log("______________________ Vrm Chain 6.1");
+
             if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
             {
                 var color = mat.GetColor("_Color");
@@ -814,7 +811,6 @@ namespace ValheimVRM
 					vrm.RecalculateSettingsHash();
 				}
  
-				Debug.LogError("______________________ vrm.SetToPlayer(__instance);");
 
 				player.StartCoroutine(vrm.SetToPlayer(player));
 			}
@@ -823,12 +819,13 @@ namespace ValheimVRM
 		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, bool isShared = false)
 		{
 			VRM vrm = new VRM(vrmVisual, name);
-			Debug.Log("______________________ Vrm Chain 4");
 			vrm = VrmManager.RegisterVrm(vrm, player.GetComponentInChildren<LODGroup>(), player);
+			
 			if (vrm != null)
 			{
 				vrm.Src = bytes;
 				vrm.RecalculateSrcBytesHash();
+
 				if (isShared)
 				{
 					vrm.Source = VRM.SourceType.Shared;
@@ -841,14 +838,15 @@ namespace ValheimVRM
 		
 		private static IEnumerator LoadVrm(Player player, string playerName, string localPlayerName, string path, float scale, bool settingsUpdated, Settings.VrmSettingsContainer settings, bool isShared = false)
 		{
-			Debug.Log("______________________ Vrm Chain 1");
+
+ 
 			Task<byte[]> bytesTask = Task.Run(() => File.ReadAllBytes(path));
 			
 			while (!bytesTask.IsCompleted)
 			{
-				yield return null;
+				yield return new WaitUntil(() => bytesTask.IsCompleted);
 			}
-			Debug.Log("______________________ Vrm Chain 2");
+
 			if (bytesTask.IsFaulted)
 			{
 				Debug.LogError($"Error loading VRM: {bytesTask.Exception.Flatten().InnerException}");
@@ -872,9 +870,9 @@ namespace ValheimVRM
 			//
 			// while (!loadTask.IsCompleted)
 			// {
-			// 	yield return null;
+			// 	yield return new WaitUntil(() => loadTask.IsCompleted);
 			// }
-			// Debug.Log("______________________ Vrm Chain 2");
+			//
 			// if (loadTask.IsFaulted)
 			// {
 			// 	Debug.LogError($"Error loading VRM: {loadTask.Exception.Flatten().InnerException}");
@@ -893,7 +891,6 @@ namespace ValheimVRM
 			
 		}
 
- 
 
 		
  

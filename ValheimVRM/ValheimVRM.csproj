@@ -52,59 +52,71 @@
     <!--      <HintPath>$(UNIVRM_UNITY_LIBS)\UniUnlit.dll</HintPath>-->
     <!--    </Reference>-->
     <Reference Include="VRM">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRM.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRM.dll</HintPath>
     </Reference>
     <Reference Include="VRM10">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRM10.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRM10.dll</HintPath>
     </Reference>
     <Reference Include="VrmLib">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VrmLib.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VrmLib.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.GLTF.IO.Runtime">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRMShaders.GLTF.IO.Runtime.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRMShaders.GLTF.IO.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.GLTF.UniUnlit.Runtime">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRMShaders.GLTF.UniUnlit.Runtime.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRMShaders.GLTF.UniUnlit.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.VRM.IO.Runtime">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRMShaders.VRM.IO.Runtime.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRMShaders.VRM.IO.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.VRM10.Format.Runtime">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRMShaders.VRM10.Format.Runtime.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRMShaders.VRM10.Format.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="VRMShaders.VRM10.MToon10.Runtime">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\VRMShaders.VRM10.MToon10.Runtime.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\VRMShaders.VRM10.MToon10.Runtime.dll</HintPath>
     </Reference>
 
     <Reference Include="FastSpringBone">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\FastSpringBone.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\FastSpringBone.dll</HintPath>
     </Reference>
     <Reference Include="FastSpringBone10">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\FastSpringBone10.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\FastSpringBone10.dll</HintPath>
     </Reference>
     <!--    <Reference Include="MeshUtility">-->
-    <!--      <HintPath>$(UNIVRM_UNITY_LIBS)\MeshUtility.dll</HintPath>-->
+    <!--      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\MeshUtility.dll</HintPath>-->
     <!--    </Reference>-->
     <Reference Include="MToon">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\MToon.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\MToon.dll</HintPath>
     </Reference>
     <!--    <Reference Include="ShaderProperty.Runtime">-->
     <!--      <HintPath>$(UNIVRM_UNITY_LIBS)\ShaderProperty.Runtime.dll</HintPath>-->
     <!--    </Reference>-->
     <Reference Include="UniGLTF">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\UniGLTF.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\UniGLTF.dll</HintPath>
     </Reference>
     <Reference Include="UniGLTF.Utils">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\UniGLTF.Utils.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\UniGLTF.Utils.dll</HintPath>
     </Reference>
     <!--    <Reference Include="UniGLTF.Editor">-->
     <!--      <HintPath>$(UNIVRM_UNITY_LIBS)\UniGLTF.Editor.dll</HintPath>-->
     <!--    </Reference>-->
     <Reference Include="UniHumanoid">
-      <HintPath>$(UNIVRM_UNITY_LIBS)\UniHumanoid.dll</HintPath>
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\UniHumanoid.dll</HintPath>
     </Reference>
-
-
+    <Reference Include="AsyncImageLoader">
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\AsyncImageLoader.Runtime.dll</HintPath>
+    </Reference>
+    
+    <Reference Include="Unity.Burst">
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\Unity.Burst.dll</HintPath>
+    </Reference>
+    
+    <Reference Include="Unity.Mathematics">
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Managed\Unity.Mathematics.dll</HintPath>
+    </Reference>
+    <Reference Include="FreeImage.dll">
+      <HintPath>$(UNIVRM_UNITY_LIBS)\Plugins\x86_64\FreeImage.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -117,7 +129,8 @@
     <PropertyGroup>
       <BepInExPluginPath>$(VALHEIM_INSTALL)\BepInEx\plugins\</BepInExPluginPath>
       <ManagedPath>$(VALHEIM_INSTALL)\valheim_Data\Managed\</ManagedPath>
-      <UniVrmLibsPath>$(UNIVRM_UNITY_LIBS)</UniVrmLibsPath>
+      <UniVrmLibsPathManaged>$(UNIVRM_UNITY_LIBS)\Managed</UniVrmLibsPathManaged>
+      <UniVrmLibsPathPlugins>$(UNIVRM_UNITY_LIBS)\Plugins\x86_64</UniVrmLibsPathPlugins>
       <Pdb2MdbPath>$(SolutionDir)pdb2mdb.exe</Pdb2MdbPath>
 <!--      <UnstrippedCorlibPath>$(VALHEIM_INSTALL)\unstripped_corlib\</UnstrippedCorlibPath>-->
     </PropertyGroup>
@@ -137,22 +150,29 @@
     <!-- Copyable files -->
     <ItemGroup>
       <!-- UNI VRM -->
-      <LibFiles Include="$(UniVrmLibsPath)\FastSpringBone.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\FastSpringBone10.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\MToon.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\UniGLTF.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\UniHumanoid.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VRM.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VRM10.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VrmLib.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\UniGLTF.Utils.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\FastSpringBone.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\FastSpringBone10.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\MToon.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\UniGLTF.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\UniHumanoid.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRM.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRM10.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VrmLib.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\UniGLTF.Utils.dll" />
+      
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRMShaders.GLTF.IO.Runtime.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRMShaders.GLTF.UniUnlit.Runtime.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRMShaders.VRM.IO.Runtime.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRMShaders.VRM10.Format.Runtime.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\VRMShaders.VRM10.MToon10.Runtime.dll" />
 
+      <!-- AsyncImageLoader -->
 
-      <LibFiles Include="$(UniVrmLibsPath)\VRMShaders.GLTF.IO.Runtime.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VRMShaders.GLTF.UniUnlit.Runtime.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VRMShaders.VRM.IO.Runtime.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VRMShaders.VRM10.Format.Runtime.dll" />
-      <LibFiles Include="$(UniVrmLibsPath)\VRMShaders.VRM10.MToon10.Runtime.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\AsyncImageLoader.Runtime.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\Unity.Burst.dll" />
+      <LibFiles Include="$(UniVrmLibsPathManaged)\Unity.Mathematics.dll" />
+      <LibFiles Include="$(UniVrmLibsPathPlugins)\FreeImage.dll" />
+      
       <!--      <LibFiles Include="$(LibsPath)\System.dll" />-->
 
       <!-- Unstripped_corlib  -->
