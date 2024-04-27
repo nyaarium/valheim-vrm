@@ -38,8 +38,9 @@ The name of the character in the game needs to correspond to a VRM and settings 
 - Current UniVrm version is 121, for Unity 2022. UniVrm was 111 previous to  Valheim Patch 0.217.46. 111 is the last version to support Unity 2020.
 - Most Recent AssetBundle of shaders is UniVrm.shaders. This has shaders that are required since version 67 - 70(I dont know exactly when).
 - You will need to install UniVrm into a blank project (create the shader asset bundle there too)
-  once that's done(install from git the assetBundle Browser), you will need to build the Unity Project. Find the Managed folder and set that
-  as a system Path. - **VALHEIM_UNITY_LIBS**
+  once that's done(install from git the assetBundle Browser), you will need to build the Unity Project. Find the (build folder)_Data and set that 
+  as a system Path. I called my project "UniVrm v121" so the data folder would be UniVrm v121_Data - **VALHEIM_UNITY_LIBS**
+- inside the your UniVrm Project you will need to install UnityAsyncImageLoader https://github.com/Looooong/UnityAsyncImageLoader
 - Set your Valheim Folder as a system path. **VALHEIM_INSTALL**
 
 
