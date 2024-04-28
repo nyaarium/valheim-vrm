@@ -563,7 +563,7 @@ namespace ValheimVRM
 							{
 								newVrm.RecalculateSettingsHash();
 							}
-							player.StartCoroutine(newVrm.SetToPlayer(player));
+							CoroutineHelper.Instance.StartCoroutine(newVrm.SetToPlayer(player));
 						}
 					}
 
