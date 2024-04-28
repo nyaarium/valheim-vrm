@@ -164,7 +164,7 @@ namespace ValheimVRM
 			}
 
 
-			player.StartCoroutine(ProcessMaterialsCoroutine(vrm, materials, settings));
+			CoroutineHelper.Instance.StartCoroutine(ProcessMaterialsCoroutine(vrm, materials, settings));
  
 
 			var lodGroup = vrm.VisualModel.AddComponent<LODGroup>();
@@ -215,20 +215,27 @@ namespace ValheimVRM
 	                    tex = new Texture2D(mainTex.width, mainTex.height);
                         var pixels = mainTex.GetPixels();
                         
-                        for (int i = 0; i < pixels.Length; i++)
+                        var pixelsTask = Task.Run(() =>
                         {
-                            var col = pixels[i] * color;
-                            Color.RGBToHSV(col, out float h, out float s, out float v);
-                            v *= settings.ModelBrightness;
-                            pixels[i] = Color.HSVToRGB(h, s, v, true);
-                            pixels[i].a = col.a;
+	                        for (int i = 0; i < pixels.Length; i++)
+	                        {
+		                        var col = pixels[i] * color;   
+		                        Color.RGBToHSV(col, out float h, out float s, out float v);
+		                        v *= settings.ModelBrightness;
+		                        pixels[i] = Color.HSVToRGB(h, s, v, true);
+		                        pixels[i].a = col.a;
+	                        }
+                        });
 
-                            if (i % 25000 == 0)
-                            {
-	                            yield return null;
-                            }
-	                           
+                        while (!pixelsTask.IsCompleted)
+                        {
+	                        yield return new WaitUntil(() => pixelsTask.IsCompleted);
                         }
+
+                        pixelsTask.Wait();
+                        
+                        
+ 
                         tex.SetPixels(pixels);
                         tex.Apply();
 
@@ -249,7 +256,7 @@ namespace ValheimVRM
                 }
             }
 
-            yield return null; // Yield after processing each material to maintain responsiveness
+            yield return null;
         }
         Debug.Log("[ValheimVRM] Material processing completed.");
     }
@@ -728,7 +735,7 @@ namespace ValheimVRM
 							}
 							else
 							{
-								__instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, path, settings.ModelScale, settingsUpdated, settings, false));
+								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, path, settings.ModelScale, settingsUpdated, settings, false));
 							}
 							
 							
@@ -748,7 +755,7 @@ namespace ValheimVRM
 							}
 							else
 							{
-								__instance.StartCoroutine(LoadVrm(__instance, playerName,localPlayerName, sharedPath, settings.ModelScale, settingsUpdated, settings,true));
+								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName,localPlayerName, sharedPath, settings.ModelScale, settingsUpdated, settings,true));
 
 							}
 							
@@ -774,7 +781,7 @@ namespace ValheimVRM
 									}
 									else
 									{
-										__instance.StartCoroutine(LoadVrm(__instance, "___Default", localPlayerName, defaultPath, settings.ModelScale, settingsUpdated, settings, false));
+										CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, "___Default", localPlayerName, defaultPath, settings.ModelScale, settingsUpdated, settings, false));
 									}
 									
 									
@@ -812,7 +819,7 @@ namespace ValheimVRM
 				}
  
 
-				player.StartCoroutine(vrm.SetToPlayer(player));
+				CoroutineHelper.Instance.StartCoroutine(vrm.SetToPlayer(player));
 			}
 		}
 		
