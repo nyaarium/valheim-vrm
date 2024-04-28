@@ -27,7 +27,7 @@ namespace ValheimVRM
             }
         }
 
-        void Update()
+        void LateUpdate()
         {
             // Check if orgEye is not null before accessing its position
             if (orgEye != null)
