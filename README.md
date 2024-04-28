@@ -40,7 +40,7 @@ The name of the character in the game needs to correspond to a VRM and settings 
 - You will need to install UniVrm into a blank project (create the shader asset bundle there too)
   once that's done(install from git the assetBundle Browser), you will need to build the Unity Project. Find the (build folder)_Data and set that 
   as a system Path. I called my project "UniVrm v121" so the data folder would be UniVrm v121_Data - **VALHEIM_UNITY_LIBS**
-- inside the your UniVrm Project you will need to install UnityAsyncImageLoader https://github.com/Looooong/UnityAsyncImageLoader
+- inside your UniVrm Project you will need to install UnityAsyncImageLoader https://github.com/aMidnightNova/UnityAsyncImageLoader
 - Set your Valheim Folder as a system path. **VALHEIM_INSTALL**
 
 
