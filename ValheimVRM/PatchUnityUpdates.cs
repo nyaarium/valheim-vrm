@@ -74,7 +74,7 @@ namespace ValheimVRM
 
         public static void GenericPrefix(out Stopwatch __state)
         {
-            __state = new Stopwatch(); // assign your own state
+            __state = new Stopwatch(); 
             __state.Start();
             // var stackTrace = new StackTrace();
             // var frame = stackTrace.GetFrame(1); 
