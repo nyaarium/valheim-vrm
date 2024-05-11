@@ -85,13 +85,14 @@ namespace ValheimVRM
         public static void GenericPostfix(Stopwatch __state)
         {
             __state.Stop();
-    
-            var stackTrace = new StackTrace();
-            var frame = stackTrace.GetFrame(1);
-            var method = frame.GetMethod();
+
             int elapsedMilliseconds = (int)__state.Elapsed.TotalMilliseconds;
+            
             if (elapsedMilliseconds > Settings.globalSettings.ProfileLogThresholdMs)
             {
+                var stackTrace = new StackTrace();
+                var frame = stackTrace.GetFrame(1);
+                var method = frame.GetMethod();
                 Debug.Log($"{method.DeclaringType.FullName}.{method.Name} | Runtime -> {elapsedMilliseconds} ms");
 
             }
