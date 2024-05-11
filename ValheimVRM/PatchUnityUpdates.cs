@@ -6,7 +6,7 @@ using Debug = UnityEngine.Debug;
 
 namespace ValheimVRM
 {
-    public static class PatchAllUpdateMeethods
+    public static class PatchAllUpdateMethods
     {
         public static void ApplyPatches(Harmony harmony)
         {
@@ -57,8 +57,8 @@ namespace ValheimVRM
                 try
                 {
                     harmony.Patch(method,
-                        prefix: new HarmonyMethod(typeof(PatchAllUpdateMeethods), nameof(GenericPrefix)),
-                        postfix: new HarmonyMethod(typeof(PatchAllUpdateMeethods), nameof(GenericPostfix)));
+                        prefix: new HarmonyMethod(typeof(PatchAllUpdateMethods), nameof(GenericPrefix)),
+                        postfix: new HarmonyMethod(typeof(PatchAllUpdateMethods), nameof(GenericPostfix)));
                     //Debug.Log($"Patched {methodName} in {type.FullName}");
                 }
                 catch (Exception ex)
