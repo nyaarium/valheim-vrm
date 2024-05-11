@@ -60,6 +60,7 @@ namespace ValheimVRM
                 case "image/png":
                     settings.format = AsyncImageLoader.FreeImage.Format.FIF_PNG;
                     break;
+                case "image/jpg":
                 case "image/jpeg":
                     settings.format = AsyncImageLoader.FreeImage.Format.FIF_JPEG;
                     break;

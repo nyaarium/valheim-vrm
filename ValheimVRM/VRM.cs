@@ -7,6 +7,7 @@ using HarmonyLib;
 using UniGLTF;
 using UnityEngine;
 using VRM;
+using UniVRM10;
 using VRMShaders;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
@@ -99,19 +100,39 @@ namespace ValheimVRM
 			try
 			{
 				var data = new GlbBinaryParser(buf, path).Parse();
-				var vrm = new VRMData(data);
-				var context = new VRMImporterContext(vrm);
+ 
 				var loaded = default(RuntimeGltfInstance);
-				
+ 
 				try
 				{
-					loaded = context.Load();
+					var vrm = new VRMData(data);
+					var context = new VRMImporterContext(vrm);
+					try
+					{
+						loaded = context.Load();
+					}
+					catch (TypeLoadException ex)
+					{
+						Debug.LogError("Failed to load type: " + ex.TypeName);
+						Debug.LogError(ex);
+					}				
 				}
-				catch (TypeLoadException ex)
+				catch(NotVrm0Exception)
 				{
-					Debug.LogError("Failed to load type: " + ex.TypeName);
-					Debug.LogError(ex);
+					Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
+					var vrm = Vrm10Data.Parse(data);
+					var context = new Vrm10Importer(vrm);
+					try
+					{
+						loaded = context.Load();
+					}
+					catch (TypeLoadException ex)
+					{
+						Debug.LogError("Failed to load type: " + ex.TypeName);
+						Debug.LogError(ex);
+					}
 				}
+
 				loaded.ShowMeshes();
 				loaded.Root.transform.localScale = Vector3.one * scale;
 
@@ -131,43 +152,83 @@ namespace ValheimVRM
 
 		public static IEnumerator ImportVisualAsync(byte[] buf, string path, float scale, Action<GameObject> onCompleted)
 		{
- 
 			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
 
-			var data = new GlbBinaryParser(buf, path).Parse();
-			yield return null;
+			var dataTask = Task.Run(() => new GlbBinaryParser(buf, path).Parse()); 
+			while (!dataTask.IsCompleted)
+			{
+				yield return new WaitUntil(() => dataTask.IsCompleted);
+			}
 
-			var vrm = new VRMData(data);
-			yield return null;
-
-			
-			var context = new VRMImporterContext(vrm, null, new TextureDeserializerAsync());
  
-			//var loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f), name => new Timer(name));					
-			var loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));					
+			Task<RuntimeGltfInstance> loader = null;
+			bool maybeVrm10 = false;
+
+			Task<VRMData> vrm0Task = Task.Run(() => new VRMData(dataTask.Result));
+			
+			while (!vrm0Task.IsCompleted)
+			{
+				yield return new WaitUntil(() => vrm0Task.IsCompleted);
+			}
+			
+ 
+			if (vrm0Task.IsFaulted)
+			{  
+				if (vrm0Task.Exception.InnerException is NotVrm0Exception)
+				{
+					maybeVrm10 = true;
+				}
+			}
+			else
+			{
+				var context = new VRMImporterContext(vrm0Task.Result, null, new TextureDeserializerAsync());
+				loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));
+			}
+
+ 
+			if (maybeVrm10)
+			{
+				Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
+				var vrmTask = Task.Run(() => Vrm10Data.Parse(dataTask.Result));
+				while (!vrmTask.IsCompleted)
+				{
+					yield return new WaitUntil(() => vrmTask.IsCompleted);
+				}
+        
+				var context = new Vrm10Importer(vrmTask.Result, null, new TextureDeserializerAsync());
+				loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));
+			}
+ 
+			if (loader == null)
+			{
+				Debug.LogError("Loader was not initialized.");
+				yield break;
+			}
 			while (!loader.IsCompleted)
 			{
 				yield return new WaitUntil(() => loader.IsCompleted);
 			}
-			try
-			{
-				
-				var loaded = loader.Result;
-			
-				loaded.ShowMeshes();
 
-				loaded.Root.transform.localScale = Vector3.one * scale;
-				Debug.Log("[ValheimVRM] VRM read successful");
-				onCompleted(loaded.Root);
-			}
-			catch (Exception ex)
+			if (loader.IsFaulted)
 			{
-				Debug.LogError("Error during VRM loading: " + ex);
+				Debug.LogError("Error during VRM loading: " + loader.Exception.Flatten());
 			}
 			
-			
- 	
+			var loaded = loader.Result;
+				
+			//this is what .LoadMeshes() does
+			// we are just yielding between each mesh.
+			foreach (Renderer visibleRenderer in loaded.VisibleRenderers)
+			{
+				visibleRenderer.enabled = true;
+				yield return null;
+			}
+
+			loaded.Root.transform.localScale = Vector3.one * scale;
+			Debug.Log("[ValheimVRM] VRM read successful");
+			onCompleted(loaded.Root);
 		}
+
 		
 		public static async Task<GameObject> ImportVisualAsync(byte[] buf, string path, float scale)
 		{
