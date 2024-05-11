@@ -331,6 +331,8 @@ namespace ValheimVRM
             public float StartVrmShareDelay = 10.0f;
             public bool ForceWindDisabled = false;
             public bool AllowIndividualWinds = true;
+            public bool EnableProfileCode = false;
+            public int ProfileLogThresholdMs = 20;
             public string UseShaderBundle = "current";
 
             public override void OnUpdate(Dictionary<string, object> oldValues)

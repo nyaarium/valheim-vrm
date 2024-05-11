@@ -58,6 +58,7 @@ namespace ValheimVRM
 
             // Harmonyパッチ全てを適用する
             harmony.PatchAll();
+            if(Settings.globalSettings.EnableProfileCode) PatchAllUpdateMeethods.ApplyPatches(harmony);
 
             // MToonシェーダ初期化
             VRMShaders.Initialize();

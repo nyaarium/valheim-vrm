@@ -10,3 +10,11 @@ AllowLocalVRMsForOtherPlayers=true
  
 // Options are: old, current.
 UseShaderBundle=current
+
+
+
+
+
+// Debug - Only turn this on if you know what you are doing it can cause lag and will explode your console with text.
+EnableProfileCode=false
+ProfileLogThresholdMs=20
