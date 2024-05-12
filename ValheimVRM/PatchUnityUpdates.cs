@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using Debug = UnityEngine.Debug;
@@ -10,8 +12,12 @@ namespace ValheimVRM
     {
         public static void ApplyPatches(Harmony harmony)
         {
-            var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var assembly in allAssemblies)
+ 
+            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var assemblyFilesInPath = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.AllDirectories);
+            var assemblyFiles = loadedAssemblies.Where(a => IsAssemblyInDirectory(a, assemblyFilesInPath)).ToList();
+
+            foreach (var assembly in assemblyFiles)
             {
                 try
                 {
@@ -24,7 +30,6 @@ namespace ValheimVRM
                         assembly.FullName.StartsWith("LuxParticles") ||
                         assembly.FullName.StartsWith("DemoScript"))
                     {
-                        //Debug.Log($"Skipping assembly: {assembly.FullName}");
                         continue;
                     }
 
@@ -49,6 +54,12 @@ namespace ValheimVRM
             }
         }
 
+        private static bool IsAssemblyInDirectory(Assembly assembly, string[] assemblyFiles)
+        {
+            string assemblyLocation = assembly.Location;
+            return assemblyFiles.Any(file => file.Equals(assemblyLocation, StringComparison.OrdinalIgnoreCase));
+        }
+
         private static void PatchMethod(Harmony harmony, Type type, string methodName)
         {
             var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -65,10 +76,6 @@ namespace ValheimVRM
                 {
                     Debug.Log($"Failed to patch method {methodName} in {type.FullName}: {ex.Message}");
                 }
-            }
-            else
-            {
-                Debug.Log($"Method {methodName} not found in {type.FullName}");
             }
         }
 
