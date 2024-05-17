@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,10 @@ namespace ValheimVRM
 {
     public static class PatchAllUpdateMethods
     {
+        private static Dictionary<string, List<long>> methodCallTimestamps = new Dictionary<string, List<long>>();
+        
         public static void ApplyPatches(Harmony harmony)
         {
- 
             var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             var assemblyFilesInPath = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.AllDirectories);
             var assemblyFiles = loadedAssemblies.Where(a => IsAssemblyInDirectory(a, assemblyFilesInPath)).ToList();
@@ -79,29 +81,52 @@ namespace ValheimVRM
             }
         }
 
-        public static void GenericPrefix(out Stopwatch __state)
+        public class GenericPState
         {
-            __state = new Stopwatch(); 
-            __state.Start();
-            // var stackTrace = new StackTrace();
-            // var frame = stackTrace.GetFrame(1); 
-            // var method = frame.GetMethod();
+            public Stopwatch Stopwatch { get; set; }
+            public MethodBase CallingMethod { get; set; }
+        }
+
+        public static void GenericPrefix(out GenericPState __state)
+        {
+            var stackTrace = new StackTrace();
+            var frame = stackTrace.GetFrame(1); 
+            var method = frame.GetMethod();
+            __state = new GenericPState
+            {
+                Stopwatch = new Stopwatch(),
+                CallingMethod = method
+            };
+            __state.Stopwatch.Start();
             // Debug.Log($"Before {method.DeclaringType.FullName}.{method.Name}");
         }
 
-        public static void GenericPostfix(Stopwatch __state)
+        public static void GenericPostfix(GenericPState __state)
         {
-            __state.Stop();
+            __state.Stopwatch.Stop();
 
-            int elapsedMilliseconds = (int)__state.Elapsed.TotalMilliseconds;
-            
+            int elapsedMilliseconds = (int)__state.Stopwatch.Elapsed.TotalMilliseconds;
+            string methodName = $"{__state.CallingMethod.DeclaringType.FullName}.{__state.CallingMethod.Name}";
+
+            if (!methodCallTimestamps.ContainsKey(methodName))
+            {
+                methodCallTimestamps[methodName] = new List<long>();
+            }
+
+            long currentTimestamp = Stopwatch.GetTimestamp();
+            methodCallTimestamps[methodName].Add(currentTimestamp);
+
+            // Remove timestamps that are outside the time window
+            methodCallTimestamps[methodName].RemoveAll(timestamp => (currentTimestamp - timestamp) / (Stopwatch.Frequency / 1000) > Settings.globalSettings.TimeWindowMs);
+
+            if (methodCallTimestamps[methodName].Count > Settings.globalSettings.CallThreshold)
+            {
+                Debug.Log($"{methodName} called {methodCallTimestamps[methodName].Count} times in the last {Settings.globalSettings.TimeWindowMs} ms");
+            }
+
             if (elapsedMilliseconds > Settings.globalSettings.ProfileLogThresholdMs)
             {
-                var stackTrace = new StackTrace();
-                var frame = stackTrace.GetFrame(1);
-                var method = frame.GetMethod();
-                Debug.Log($"{method.DeclaringType.FullName}.{method.Name} | Runtime -> {elapsedMilliseconds} ms");
-
+                Debug.Log($"{methodName} | Runtime -> {elapsedMilliseconds} ms | Call Count -> {methodCallTimestamps[methodName].Count}");
             }
         }
     }

@@ -16,5 +16,18 @@ UseShaderBundle=current
 
 
 // Debug - Only turn this on if you know what you are doing it can cause lag and will explode your console with text.
+
+//enable profile code for the Update Loops.
+
 EnableProfileCode=false
+
+// a method running longer then the next setting will debug log.
 ProfileLogThresholdMs=20
+
+
+// the next 2 settings will show how often a method is called in a period of time.
+
+// the time frame in which to count how many time a method was called.
+TimeWindowMs=100
+// how many times does the method need to be called in TimeWindowMs for it to log
+CallThreshold=20

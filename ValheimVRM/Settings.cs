@@ -333,6 +333,12 @@ namespace ValheimVRM
             public bool AllowIndividualWinds = true;
             public bool EnableProfileCode = false;
             public int ProfileLogThresholdMs = 20;
+            
+            
+            public int CallThreshold = 6;
+            public int TimeWindowMs = 100;
+            
+            
             public string UseShaderBundle = "current";
 
             public override void OnUpdate(Dictionary<string, object> oldValues)
