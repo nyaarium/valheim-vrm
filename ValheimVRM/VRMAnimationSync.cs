@@ -75,31 +75,6 @@ namespace ValheimVRM
 			SittingShip,
 			Sleeping
 		};
-
-		void Update()
-		{
-			vrmAnim.transform.localPosition = Vector3.zero;
-			if (!ragdoll)
-			{
-				for (var i = 0; i < 55; i++)
-				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-
-					if (i > 0 && orgTrans != null && vrmTrans != null)
-					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot) {
-							orgTrans.position = vrmTrans.position;
-						} else {
-							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
-						}
-					}
-				}
-			}
-
-			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
-		}
-
 		private Vector3 StateHashToOffset(int stateHash, out float interpSpeed)
 		{
 			interpSpeed = Time.deltaTime * 5;
@@ -132,6 +107,31 @@ namespace ValheimVRM
 					return Vector3.zero;
 			}
 		}
+		void Update()
+		{
+			vrmAnim.transform.localPosition = Vector3.zero;
+			if (!ragdoll)
+			{
+				for (var i = 0; i < 55; i++)
+				{
+					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
+					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
+
+					if (i > 0 && orgTrans != null && vrmTrans != null)
+					{
+						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot) {
+							orgTrans.position = vrmTrans.position;
+						} else {
+							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
+						}
+					}
+				}
+			}
+
+			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
+		}
+
+
 		
 		void LateUpdate()
 		{

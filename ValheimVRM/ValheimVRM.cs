@@ -40,20 +40,23 @@ namespace ValheimVRM
 
 		static bool Prefix(ref Shader __result, string name)
 		{
+			Shader shader;
+			if (ShaderDictionary.TryGetValue(name, out shader))
+			{
+				
+				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in preloaded ShaderDictionary.");
+				__result = shader;
+				return false;
+			}
 			
-			if (VRMShaders.Shaders.TryGetValue(name, out var shader))
+			
+			if (VRMShaders.Shaders.TryGetValue(name, out shader))
 			{
 				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in VRMShaders.Shaders");
 				__result = shader;
 				return false;
 			}
-
-			if (ShaderDictionary.TryGetValue(name, out shader))
-			{
-				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in preloaded ShaderDictionary.");
-				__result = shader;
-				return false;
-			}
+			
 
 			Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' NOT FOUND in ShaderDictionary. passing method to original Shader.Find.");
 			return true;
@@ -190,6 +193,17 @@ namespace ValheimVRM
 	    
         Shader foundShader = Shader.Find("Custom/Player");
 
+
+        // if (foundShader != null)
+        // {
+	       //  var count = foundShader.GetPropertyCount();
+	       //  for (int i = 0; i < count; i++)
+	       //  {
+		      //   Debug.Log($"Shader Name: {foundShader.name} Prop: {i} -> {foundShader.GetPropertyName(i)}");
+        //
+	       //  }
+        // }
+        
         foreach (var mat in materials)
         {
 

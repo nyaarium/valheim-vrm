@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+﻿using System.Collections;
+using System.Globalization;
 using BepInEx;
 using HarmonyLib;
 using System.Reflection;
+using UnityEngine;
 
 #if DEBUG
 
@@ -54,14 +56,21 @@ namespace ValheimVRM
             Settings.AddSettingsFromFile("___Default", false);
             
             // Harmonyパッチ作成
+
+            // Apply Harmony patches after the delay, this is needed because textures load way later now.
+            StartCoroutine(DelayedPatch(10f));
+ 
+        }
+        
+        IEnumerator DelayedPatch(float delay)
+        {
+            yield return new WaitForSeconds(delay);
             var harmony = new Harmony("com.yoship1639.plugins.valheimvrm.patch");
 
-            // Harmonyパッチ全てを適用する
             harmony.PatchAll();
             if(Settings.globalSettings.EnableProfileCode) PatchAllUpdateMethods.ApplyPatches(harmony);
-
-            // MToonシェーダ初期化
             VRMShaders.Initialize();
+
         }
     }
 }
