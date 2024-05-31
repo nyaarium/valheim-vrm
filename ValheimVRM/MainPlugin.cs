@@ -20,7 +20,9 @@ namespace ValheimVRM
     {
         public const string PluginGuid = "com.yoship1639.plugins.valheimvrm";
         public const string PluginName = "ValheimVRM";
-        public const string PluginVersion = "1.2.3.0";
+        public const string PluginVersion = "1.3.10.0";
+        
+        private static Harmony _harmony = new Harmony("com.yoship1639.plugins.valheimvrm.patch");
 
         void Awake()
         {
@@ -57,18 +59,17 @@ namespace ValheimVRM
             
             // Harmonyパッチ作成
 
-            // Apply Harmony patches after the delay, this is needed because textures load way later now.
-            StartCoroutine(DelayedPatch(10f));
- 
+            // Apply Harmony patches after the FejdStartup, this is needed because textures load way later now.
+            PatchFejdStartup.Apply(_harmony);
+
         }
         
-        IEnumerator DelayedPatch(float delay)
+        
+        internal static void PatchAll()
         {
-            yield return new WaitForSeconds(delay);
-            var harmony = new Harmony("com.yoship1639.plugins.valheimvrm.patch");
+            if(Settings.globalSettings.EnableProfileCode) PatchAllUpdateMethods.ApplyPatches(_harmony);
 
-            harmony.PatchAll();
-            if(Settings.globalSettings.EnableProfileCode) PatchAllUpdateMethods.ApplyPatches(harmony);
+            _harmony.PatchAll();
             VRMShaders.Initialize();
 
         }
