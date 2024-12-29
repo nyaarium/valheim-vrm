@@ -282,7 +282,7 @@ namespace ValheimVRM
 			var oldModel = animator.transform.parent.Find("VRM_Visual");
 			if (oldModel != null)
 			{
-				Object.Destroy(oldModel);
+				Object.Destroy(oldModel.gameObject);
 			}
 			
 			vrmModel.transform.SetParent(animator.transform.parent, false);;
