@@ -38,6 +38,10 @@ The name of the character in the game needs to correspond to a VRM and settings 
   the newer current bundle should work, but JIC ive included the old one still\
   Its in General settings. UseShaderBundle=<old,current>. Note that this will affect all models.
 
+
+# Stop Here
+unless you wish to develop this repo, then the following info will help you get started.
+
 ### Technical Stuff for maintaining this repo
 - You might need to build an Asset Bundle of shaders to stay inline with UniVrm. This is probably a non issue
   unless Valheim Updates Unity. - see next point.
