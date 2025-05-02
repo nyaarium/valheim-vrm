@@ -8,7 +8,7 @@ This fork is actively developed and maintained. If you need help, want to reques
 If the model has MToon shaders you should not have ssao on, this is true even if you do not have MToon stuff enabled in the settings. You can set AttemptTextureFix to true, it will convert shaders to standard at game runtime.
 
 ### How to Install
-[Download](https://github.com/aMidnightNova/ValheimVRM/releases/latest) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data) into your valheim install directory.
+[Download](https://github.com/aMidnightNova/ValheimVRM/releases/latest) the latest release and extract it. There will be a folder called release, copy the folders inside (BepInEx,valheim_Data,ValheimVRM) into your valheim install directory.
 The folders are setup to put the files where they need to go.
 
 ### First Time Install
