@@ -13,11 +13,17 @@ jobs:
         with:
           name: release
 
+      - name: Grab info
+        id: info
+        run: |
+          VERSION=$(cat release/version.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          name: TESTING Release ${{ steps.build.outputs.version }}
-          tag: ${{ steps.build.outputs.version }}
+          name: Release ${{ steps.info.outputs.version }}
+          tag: ${{ steps.info.outputs.version }}
           commit: ${{ github.ref }}
           artifacts: "*.zip"
           bodyFile: "body.md"
