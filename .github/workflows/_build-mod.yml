@@ -1,0 +1,51 @@
+name: Workflow Call - Build Mod
+
+on:
+  workflow_call:
+    inputs:
+      project_name:
+        description: 'Project name for the Docker build'
+        type: string
+        required: true
+
+jobs:
+  build:
+    name: Build Mod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          tags: builder
+          context: .
+          file: .devcontainer/Dockerfile.devcontainer
+          build-args: |
+            PROJECT_NAME=${{ inputs.project_name }}
+          cache-from: type=gha
+          load: true
+
+      - name: Run build script in container
+        id: build
+        run: |
+          PROJECT_NAME=${{ inputs.project_name }}
+          docker run --rm \
+            --user vscode \
+            -v ${{ github.workspace }}:/$PROJECT_NAME \
+            builder \
+            bash "/$PROJECT_NAME/build.sh"
+
+          echo "version=$(cat release/version.txt)" >> $GITHUB_OUTPUT
+          echo "checksum=$(cat release/sha256.txt)" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release/*
+          retention-days: 7

@@ -1,0 +1,26 @@
+name: Pull Request (main)
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-docker:
+    uses: ./.github/workflows/_build-docker.yml
+    secrets: inherit
+    permissions:
+      actions: read
+      contents: read
+    with:
+      project_name: valheim-vrm
+
+  build-mod:
+    needs: build-docker
+    uses: ./.github/workflows/_build-mod.yml
+    secrets: inherit
+    permissions:
+      actions: read
+      contents: read
+    with:
+      project_name: valheim-vrm
