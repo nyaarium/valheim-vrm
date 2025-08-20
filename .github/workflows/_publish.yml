@@ -20,7 +20,17 @@ jobs:
           VERSION=$(cat release/version.txt)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Check if release notes has content (Note may contain newlines)
+        id: check-release-notes
+        run: |
+          if [ "$(tr -d ' \t\n\r' < release/body.md | wc -c)" -eq 0 ]; then
+            echo "release-notes=false" >> $GITHUB_OUTPUT
+          else
+            echo "release-notes=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create release
+        if: steps.check-release-notes.outputs.release-notes == 'true'
         uses: ncipollo/release-action@v1
         with:
           name: Release ${{ steps.info.outputs.version }}
