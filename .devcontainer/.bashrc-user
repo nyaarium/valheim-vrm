@@ -158,7 +158,7 @@ git config --global core.editor "cursor"
 # Unconfigure key signing, for when the user has it enabled on the host machine
 git config --global --unset gpg.format
 git config --global --unset user.signingKey
-git config --global --unset commit.gpgSign
+git config --global commit.gpgsign false
 
 # Trust the workspace folder
 git config --global --add safe.directory /workspace

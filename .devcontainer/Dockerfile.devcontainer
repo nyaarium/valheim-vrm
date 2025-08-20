@@ -124,7 +124,7 @@ ENV DEBIAN_FRONTEND=dialog
 
 # Add vscode user
 RUN groupadd -r vscode \
-	&& useradd -rs /bin/bash -m -g vscode vscode \
+	&& useradd -rs /bin/bash -m -g vscode -u 1001 vscode \
 	&& echo "vscode:vscode" | chpasswd \
 	&& echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode
 
