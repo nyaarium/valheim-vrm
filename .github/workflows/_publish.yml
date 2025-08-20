@@ -12,6 +12,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: release
+          path: release/
 
       - name: Grab info
         id: info
@@ -25,6 +26,6 @@ jobs:
           name: Release ${{ steps.info.outputs.version }}
           tag: ${{ steps.info.outputs.version }}
           commit: ${{ github.ref }}
-          artifacts: "*.zip"
-          bodyFile: "body.md"
+          artifacts: "release/*.zip"
+          bodyFile: "release/body.md"
           makeLatest: true
