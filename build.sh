@@ -3,7 +3,9 @@ set -e
 
 echo "Building ValheimVRM..."
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$(dirname "$0")"
+
+ROOT="$(pwd)"
 INSTALL_PATH=
 VALHEIM_DLLS=/var/build-dlls
 UNIVRM_UNITY_LIBS="$ROOT/Libs"
@@ -14,4 +16,16 @@ cd "$PROJECT_DIR"
 
 dotnet build --configuration Release
 
-echo "Build completed successfully!"
+# Extract version info
+VERSION=$(grep -oP 'PluginVersion = "([^"]+)"' VersionInfo.g.cs | cut -d'"' -f2)
+FILENAME=$(ls "$ROOT"/release/*.zip | head -1 | xargs basename)
+CHECKSUM=$(sha256sum "$ROOT/release/$FILENAME" | cut -d' ' -f1)
+
+# Write info to files
+echo -n "$VERSION" > "$ROOT/release/version.txt"
+echo -n "$CHECKSUM" > "$ROOT/release/sha256.txt"
+cp "$ROOT/release-notes.md" "$ROOT/release/body.md"
+
+echo "Release: $FILENAME"
+echo "Version: $VERSION"
+echo "sha256: $CHECKSUM"

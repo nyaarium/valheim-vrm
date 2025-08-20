@@ -23,9 +23,10 @@
 		<LIBS_MANAGED>$(LIBS)/Managed</LIBS_MANAGED>
 		<LIBS_PLUGINS_64>$(LIBS)/Plugins/x86_64</LIBS_PLUGINS_64>
 
-		<RELEASE_PATH>$(ROOT_DIR)/release</RELEASE_PATH>
-		<RELEASE_MANAGED>$(RELEASE_PATH)/valheim_Data/Managed</RELEASE_MANAGED>
-		<RELEASE_PLUGIN>$(RELEASE_PATH)/BepInEx/plugins</RELEASE_PLUGIN>
+		<FINAL_RELEASE>$(ROOT_DIR)/release</FINAL_RELEASE>
+		<RELEASE_STAGING>$(ROOT_DIR)/release_files</RELEASE_STAGING>
+		<RELEASE_MANAGED>$(RELEASE_STAGING)/valheim_Data/Managed</RELEASE_MANAGED>
+		<RELEASE_PLUGIN>$(RELEASE_STAGING)/BepInEx/plugins</RELEASE_PLUGIN>
 
 		<Pdb2MdbPath>$(ROOT_DIR)/pdb2mdb.exe</Pdb2MdbPath>
 	</PropertyGroup>
@@ -164,10 +165,12 @@
 		<Copy Condition=" '$(Configuration)' == 'Release' and '$(INSTALL_PATH)' != '' " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(INSTALL_PATH_PLUGINS)/ValheimVRM" />
 
 		<!-- Clean release directory -->
-		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(RELEASE_PATH)" ContinueOnError="true" />
+		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(FINAL_RELEASE)" ContinueOnError="true" />
+		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(RELEASE_STAGING)" ContinueOnError="true" />
 
-		<MakeDir Directories="$(RELEASE_PATH)" Condition=" '$(Configuration)' == 'Release' " />
-		<MakeDir Directories="$(RELEASE_PATH)/ValheimVRM" Condition=" '$(Configuration)' == 'Release' " />
+		<MakeDir Directories="$(FINAL_RELEASE)" Condition=" '$(Configuration)' == 'Release' " />
+		<MakeDir Directories="$(RELEASE_STAGING)" Condition=" '$(Configuration)' == 'Release' " />
+		<MakeDir Directories="$(RELEASE_STAGING)/ValheimVRM" Condition=" '$(Configuration)' == 'Release' " />
 
 		<MakeDir Directories="$(RELEASE_MANAGED)" Condition=" '$(Configuration)' == 'Release' " />
 		<MakeDir Directories="$(RELEASE_PLUGIN)" Condition=" '$(Configuration)' == 'Release' " />
@@ -189,21 +192,21 @@
 			<ProjectFiles Include="$(ROOT_DIR)/global_settings.txt.example" />
 			<ProjectFiles Include="$(ROOT_DIR)/README.md" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectFiles)" DestinationFolder="$(RELEASE_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectFiles)" DestinationFolder="$(RELEASE_STAGING)/ValheimVRM" />
 
 
 		<!-- Zip for release -->
 
 		<!-- Windows: use PowerShell Compress-Archive -->
 		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' "
-			Command="powershell -NoProfile -NonInteractive -Command &quot;Compress-Archive -Path '$(RELEASE_PATH)*' -DestinationPath '$(ROOT_DIR)/ValheimVRM-$(Version).zip' -Force&quot;" />
+			Command="powershell -NoProfile -NonInteractive -Command &quot;Compress-Archive -Path '$(RELEASE_STAGING)*' -DestinationPath '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' -Force&quot;" />
 
 		<!-- Linux: use zip -->
 		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' != 'Windows_NT' "
-			Command="cd '$(RELEASE_PATH)' &amp;&amp; zip -r -9 '$(ROOT_DIR)/ValheimVRM-$(Version).zip' ." />
+			Command="cd '$(RELEASE_STAGING)' &amp;&amp; zip -r -9 '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' ." />
 
 		<!-- Cleanup after archiving -->
-		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(RELEASE_PATH)" />
+		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(RELEASE_STAGING)" />
 	</Target>
 
 </Project>
