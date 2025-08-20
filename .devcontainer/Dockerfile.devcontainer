@@ -1,0 +1,132 @@
+FROM debian:trixie
+
+ARG PROJECT_NAME
+RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg is required" && exit 1) \
+    && mkdir -p /$PROJECT_NAME \
+	&& ln -sf /$PROJECT_NAME /workspace	\
+	&& rmdir /$PROJECT_NAME
+
+# Switch to apt noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt install -y locales tzdata && apt clean -y && rm -rf /var/lib/apt/lists/* \
+    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8 \
+    && ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime \
+    && echo "America/Los_Angeles" > /etc/timezone
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# General development tools
+RUN apt update && apt install -y \
+	bash-completion \
+	curl \
+	gcc \
+	git \
+	gpg \
+	htop \
+	iftop \
+	jq \
+	less \
+	make \
+	man \
+	ncdu \
+	neovim \
+	net-tools \
+	procps \
+	rsync \
+	screen \
+	slurm \
+	sudo \
+	tmux \
+	tree \
+	unzip \
+	uuid \
+	vim \
+	wget \
+	zip \
+	&& apt autoremove --purge -y \
+	&& apt clean -y && rm -rf /var/lib/apt/lists/*
+
+# Install Cursor agent
+RUN curl -fsSL https://cursor.com/install | bash
+
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
+	&& apt update && apt install -y gh \
+	&& apt clean && rm -rf /var/lib/apt/lists/*
+
+
+############################
+# .NET SDK
+
+RUN wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+	&& dpkg -i packages-microsoft-prod.deb \
+	&& rm packages-microsoft-prod.deb \
+	&& apt update \
+	&& apt install -y dotnet-sdk-8.0 \
+	&& apt clean && rm -rf /var/lib/apt/lists/*
+
+
+############################
+# App dependencies
+
+RUN cd /usr/local/bin/ \
+	&& apt update && apt install -y \
+	lib32gcc-s1 \
+	&& apt autoremove --purge -y && apt clean \
+	&& wget https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+	&& tar -xvzf steamcmd_linux.tar.gz \
+	&& rm steamcmd_linux.tar.gz \
+	&& mv steamcmd.sh steamcmd \
+	&& chmod 755 steamcmd \
+	&& cd / \
+	&& steamcmd +login anonymous +quit
+
+
+############################
+# Valheim DLLs - Update this list as needed:
+#   - assembly_utils.dll
+#   - assembly_guiutils.dll
+#   - assembly_valheim.dll
+#   - UnityEngine.dll
+
+RUN steamcmd \
+	+force_install_dir /var/valheim \
+	+login anonymous \
+	+app_update 896660 validate \
+	+quit \
+	&& mkdir -p /var/build-dlls/valheim_Data/Managed \
+	&& cp /var/valheim/valheim_server_Data/Managed/*.dll /var/build-dlls/valheim_Data/Managed/ \
+	&& rm -rf /var/valheim
+
+
+############################
+# BepInEx DLLs - Update the version as needed:
+ENV BEPINEX_VERSION=5.4.23.3
+
+RUN mkdir -p /var/bepinex \
+	&& curl -sSL -o /var/bepinex/zip.zip https://github.com/BepInEx/BepInEx/releases/download/v${BEPINEX_VERSION}/BepInEx_win_x64_${BEPINEX_VERSION}.zip \
+	&& unzip /var/bepinex/zip.zip -d /var/bepinex/ \
+	&& mkdir -p /var/build-dlls/BepInEx/core \
+	&& cp /var/bepinex/BepInEx/core/*.dll /var/build-dlls/BepInEx/core/ \
+	&& rm -rf /var/bepinex
+
+
+############################
+# TODO: Get UniVRM DLLs
+# I couldn't find a way to extract them from a .unitypackage, so for now they are commited to the repo under Libs/
+
+
+# Switch back to dialog for user's use of apt
+ENV DEBIAN_FRONTEND=dialog
+
+# Add vscode user
+RUN groupadd -r vscode \
+	&& useradd -rs /bin/bash -m -g vscode vscode \
+	&& echo "vscode:vscode" | chpasswd \
+	&& echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode
+
+COPY .devcontainer/.bashrc-root /root/.bashrc
+COPY .devcontainer/.bashrc-user /home/vscode/.bashrc
