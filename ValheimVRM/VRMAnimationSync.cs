@@ -131,10 +131,27 @@ namespace ValheimVRM
 			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
 		}
 
-
-		
 		void LateUpdate()
 		{
+			if (ragdoll)
+			{
+				vrmAnim.transform.localPosition = Vector3.zero;
+				var verticalOffset = Vector3.up * settings.ModelOffsetY;
+
+				// For all Unity avatar bones
+				for (var i = 0; i < 55; i++)
+				{
+					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
+					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
+					if (orgTrans != null && vrmTrans != null)
+					{
+						vrmTrans.position = orgTrans.position + verticalOffset;
+						vrmTrans.rotation = orgTrans.rotation;
+					}
+				}
+				return;
+			}
+
 			float playerScaleFactor = settings.PlayerHeight / 1.85f;
 			
 			vrmAnim.transform.localPosition = Vector3.zero;

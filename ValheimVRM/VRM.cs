@@ -159,12 +159,27 @@ namespace ValheimVRM
 			{
 				yield return new WaitUntil(() => dataTask.IsCompleted);
 			}
+			
+			if (dataTask.IsFaulted)
+			{
+				Debug.LogError($"[ValheimVRM] Failed to parse GLB data: {dataTask.Exception?.Flatten()}");
+				onCompleted(null);
+				yield break;
+			}
+			
+			var gltfData = dataTask.Result;
+			if (gltfData == null)
+			{
+				Debug.LogError("[ValheimVRM] GLB parser returned null data");
+				onCompleted(null);
+				yield break;
+			}
 
  
 			Task<RuntimeGltfInstance> loader = null;
 			bool maybeVrm10 = false;
 
-			Task<VRMData> vrm0Task = Task.Run(() => new VRMData(dataTask.Result));
+			Task<VRMData> vrm0Task = Task.Run(() => new VRMData(gltfData));
 			
 			while (!vrm0Task.IsCompleted)
 			{
@@ -182,21 +197,28 @@ namespace ValheimVRM
 			else
 			{
 				var context = new VRMImporterContext(vrm0Task.Result, null, new TextureDeserializerAsync());
-				loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));
+				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
 
  
 			if (maybeVrm10)
 			{
 				Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
-				var vrmTask = Task.Run(() => Vrm10Data.Parse(dataTask.Result));
+				var vrmTask = Task.Run(() => Vrm10Data.Parse(gltfData));
 				while (!vrmTask.IsCompleted)
 				{
 					yield return new WaitUntil(() => vrmTask.IsCompleted);
 				}
+				
+				if (vrmTask.IsFaulted)
+				{
+					Debug.LogError($"[ValheimVRM] Failed to parse VRM10 data: {vrmTask.Exception?.Flatten()}");
+					onCompleted(null);
+					yield break;
+				}
         
-				var context = new Vrm10Importer(vrmTask.Result, null, new TextureDeserializerAsync());
-				loader = context.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));
+				var context = new Vrm10Importer(vrmTask.Result, null, null);
+				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
  
 			if (loader == null)
@@ -212,9 +234,17 @@ namespace ValheimVRM
 			if (loader.IsFaulted)
 			{
 				Debug.LogError("Error during VRM loading: " + loader.Exception.Flatten());
+				onCompleted(null);
+				yield break;
 			}
 			
 			var loaded = loader.Result;
+			if (loaded == null)
+			{
+				Debug.LogError("[ValheimVRM] Loader returned null result");
+				onCompleted(null);
+				yield break;
+			}
 				
 			//this is what .LoadMeshes() does
 			// we are just yielding between each mesh.
@@ -240,13 +270,19 @@ namespace ValheimVRM
 			
 			RuntimeGltfInstance loaded;
 			
-			using(VRMImporterContext loader = new VRMImporterContext(vrm))
+			using(VRMImporterContext loader = new VRMImporterContext(vrm, null, new TextureDeserializerAsync()))
 			{
-				loaded = await loader.LoadAsync(new RuntimeOnlyAwaitCaller(0.001f));
+				loaded = await loader.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
 
 			try
 			{
+				if (loaded == null)
+				{
+					Debug.LogError("[ValheimVRM] Loader returned null result");
+					return null;
+				}
+				
 				loaded.ShowMeshes();
 				loaded.Root.transform.localScale = Vector3.one * scale;
 				Debug.Log("[ValheimVRM] VRM read successful");
@@ -264,118 +300,120 @@ namespace ValheimVRM
  
 		public IEnumerator SetToPlayer(Player player)
 		{
+			if (player == null) yield break;
 			var animator = player.GetComponentInChildren<Animator>();
+			while (animator == null)
+			{
+				yield return null;
+				if (player == null) yield break;
+				animator = player.GetComponentInChildren<Animator>();
+			}
 
 			var vrmController = player.GetComponent<VrmController>();
-			
-			
-			
+			if (vrmController == null) yield break;
+
 			var settings = Settings.GetSettings(Name);
+			if (settings == null) yield break;
 			player.m_maxInteractDistance *= settings.InteractionDistanceScale;
- 
+		 
+			if (VisualModel == null) yield break;
 			var vrmModel = Object.Instantiate(VisualModel);
+			if (vrmModel == null) yield break;
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";
 			vrmModel.SetActive(true);
 			vrmController.visual = vrmModel;
 
-			var oldModel = animator.transform.parent.Find("VRM_Visual");
+			var parent = animator.transform != null ? animator.transform.parent : null;
+			if (parent == null) yield break;
+			var oldModel = parent.Find("VRM_Visual");
 			if (oldModel != null)
 			{
 				Object.Destroy(oldModel.gameObject);
 			}
 			
-			vrmModel.transform.SetParent(animator.transform.parent, false);;
+			vrmModel.transform.SetParent(parent, false);
 
 			float newHeight = settings.PlayerHeight;
 			float newRadius = settings.PlayerRadius;
 
 			var rigidBody = player.GetComponent<Rigidbody>();
 			var collider = player.GetComponent<CapsuleCollider>();
-			
-			collider.height = newHeight;
-			collider.radius = newRadius;
-			collider.center = new Vector3(0, newHeight / 2, 0);
-			
-			
-			rigidBody.centerOfMass = collider.center;
+			if (collider != null)
+			{
+				collider.height = newHeight;
+				collider.radius = newRadius;
+				collider.center = new Vector3(0, newHeight / 2, 0);
+			}
+			if (rigidBody != null && collider != null)
+			{
+				rigidBody.centerOfMass = collider.center;
+			}
 			
 			yield return null;
 
-			foreach (var smr in player.GetVisual().GetComponentsInChildren<SkinnedMeshRenderer>())
+			var originalVisual = player.GetVisual();
+			if (originalVisual != null)
 			{
-				smr.forceRenderingOff = true;
-				smr.updateWhenOffscreen = true;
-				yield return null;
+				foreach (var smr in originalVisual.GetComponentsInChildren<SkinnedMeshRenderer>())
+				{
+					smr.forceRenderingOff = true;
+					smr.updateWhenOffscreen = true;
+					yield return null;
+				}
 			}
 
 			var orgAnim = AccessTools.FieldRefAccess<Player, Animator>(player, "m_animator");
-			orgAnim.keepAnimatorStateOnDisable = true;
-			orgAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+			if (orgAnim != null)
+			{
+				orgAnim.keepAnimatorStateOnDisable = true;
+				orgAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+				vrmModel.transform.localPosition = orgAnim.transform.localPosition;
+			}
 			yield return null;
 
-			vrmModel.transform.localPosition = orgAnim.transform.localPosition;
-
 			// アニメーション同期
-
 			var animationSync = vrmModel.GetComponent<VRMAnimationSync>();
-			
 			if (animationSync == null)
 			{
 				animationSync = vrmModel.AddComponent<VRMAnimationSync>();
-				animationSync.Setup(orgAnim, settings, false);
 			}
-			else
+			if (orgAnim != null)
 			{
 				animationSync.Setup(orgAnim, settings, false);
 			}
 			yield return null;
+
+			if (player == null || vrmModel == null) yield break;
 
 			// カメラ位置調整
 			if (settings.FixCameraHeight)
 			{
-				var vrmEye = animator.GetBoneTransform(HumanBodyBones.LeftEye);
-					
-				if (vrmEye == null)
+				var currentAnimator = player != null ? player.GetComponentInChildren<Animator>() : null;
+				if (currentAnimator != null)
 				{
-					vrmEye = animator.GetBoneTransform(HumanBodyBones.Head);
-				}
-
-				if (vrmEye == null)
-				{
-					vrmEye = animator.GetBoneTransform(HumanBodyBones.Neck);
-				}
-				
-				if (vrmEye != null)
-				{
-					var vrmEyePostSync = player.gameObject.GetComponent<VRMEyePositionSync>();
-					if ( vrmEyePostSync == null)
+					var vrmEye = currentAnimator.GetBoneTransform(HumanBodyBones.LeftEye) ??
+								currentAnimator.GetBoneTransform(HumanBodyBones.Head) ??
+								currentAnimator.GetBoneTransform(HumanBodyBones.Neck);
+					if (vrmEye != null && player != null)
 					{
-						vrmEyePostSync = player.gameObject.AddComponent<VRMEyePositionSync>();
-						vrmEyePostSync.Setup(vrmEye);
-					}
-					else
-					{
-						vrmEyePostSync.Setup(vrmEye);
+						var vrmEyePostSync = player.gameObject.GetComponent<VRMEyePositionSync>() ?? player.gameObject.AddComponent<VRMEyePositionSync>();
+						if (vrmEyePostSync != null)
+						{
+							vrmEyePostSync.Setup(vrmEye);
+						}
 					}
 				}
 			}
 			yield return null;
 
+			if (player == null || vrmModel == null) yield break;
+
 			// MToonの場合環境光の影響をカラーに反映する
 			if (settings.UseMToonShader)
 			{
-				var mToonColorSync = vrmModel.GetComponent<MToonColorSync>();
-
-				if (mToonColorSync == null)
-				{
-					mToonColorSync = vrmModel.AddComponent<MToonColorSync>();
-					mToonColorSync.Setup(vrmModel);
-				}
-				else
-				{
-					mToonColorSync.Setup(vrmModel);
-				}
+				var mToonColorSync = vrmModel.GetComponent<MToonColorSync>() ?? vrmModel.AddComponent<MToonColorSync>();
+				mToonColorSync.Setup(vrmModel);
 			}
 			yield return null;
 
@@ -389,7 +427,12 @@ namespace ValheimVRM
 				yield return null;
 			}
 			
-			player.GetComponent<VrmController>().ReloadSpringBones();
+			if (player == null) yield break;
+			var controller = player.GetComponent<VrmController>();
+			if (controller != null)
+			{
+				controller.ReloadSpringBones();
+			}
         }
     }
 }
