@@ -66,32 +66,32 @@ namespace ValheimVRM
 	public static class VRMShaders
 	{
 		public static Dictionary<string, Shader> Shaders { get; } = new Dictionary<string, Shader>();
+		private static bool _initialized;
 
 		public static void Initialize()
 		{
-			var bundlePath = "";
-			if (Settings.globalSettings.UseShaderBundle == "current")
-			{
-				bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVrm.shaders");
-			} else if (Settings.globalSettings.UseShaderBundle == "old")
-			{
-				bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"OldUniVrm.shaders");
-			}
-			else
-			{
-				Debug.LogError("[ValheimVRM] Invalid UseShaderBundle; old, current");
-			}
+			if (_initialized) return;
+			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVrm.shaders");
 			
 			if (File.Exists(bundlePath))
 			{
 				var assetBundle = AssetBundle.LoadFromFile(bundlePath);
-				var assets = assetBundle.LoadAllAssets<Shader>();
-				foreach (var asset in assets)
+				if (assetBundle == null)
 				{
-					UnityEngine.Debug.Log("[ValheimVRM] Add Shader: " + asset.name);
-					Shaders.Add(asset.name, asset);
+					Debug.LogError("[ValheimVRM] Failed to load shader AssetBundle (already loaded or missing): " + bundlePath);
+				}
+				else
+				{
+					var assets = assetBundle.LoadAllAssets<Shader>();
+					foreach (var asset in assets)
+					{
+						UnityEngine.Debug.Log("[ValheimVRM] Add Shader: " + asset.name);
+						Shaders[asset.name] = asset;
+					}
+					assetBundle.Unload(false);
 				}
 			}
+			_initialized = true;
 		}
 	}
 
@@ -373,8 +373,9 @@ namespace ValheimVRM
 			if (rightBackItem != null)
 			{
 				var rightBackName = Utils.GetField<VisEquipment>("m_rightBackItem").GetValue(__instance);
-				var isKnife = rightBackName.ToString().Substring(0, 5) == "Knife";
-				var isStaff = rightBackName.ToString().Substring(0, 5) == "Staff";
+				var rightBackNameString = rightBackName?.ToString() ?? string.Empty;
+				var isKnife = rightBackNameString.StartsWith("Knife", StringComparison.Ordinal);
+				var isStaff = rightBackNameString.StartsWith("Staff", StringComparison.Ordinal);
 				
 				Vector3 offset = Vector3.zero;
 				
@@ -402,9 +403,9 @@ namespace ValheimVRM
 				
 				var leftBackName = Utils.GetField<VisEquipment>("m_leftBackItem").GetValue(__instance);
 				//Debug.Log(leftBackName.ToString());
-
-				var isBow = leftBackName.ToString().Substring(0, 3) == "Bow";
-				var isStaffSkeleton = leftBackName.ToString() == "StaffSkeleton";
+				var leftBackNameString = leftBackName?.ToString() ?? string.Empty;
+				var isBow = leftBackNameString.StartsWith("Bow", StringComparison.Ordinal);
+				var isStaffSkeleton = string.Equals(leftBackNameString, "StaffSkeleton", StringComparison.Ordinal);
 				if (isBow)
 				{
 					leftBackItem.transform.localPosition = settings.BowBackPos / 100.0f;
@@ -452,7 +453,15 @@ namespace ValheimVRM
 				if (VrmManager.PlayerToVrmInstance.TryGetValue(player, out var vrm))
 				{
 					vrm.transform.SetParent(ragdoll.transform);
-					vrm.GetComponent<VRMAnimationSync>().Setup(ragAnim, Settings.GetSettings(VrmManager.PlayerToName[player]), true);
+
+					// Keep VRM visible and drive it from ragdoll bones
+					foreach (var mr in vrm.GetComponentsInChildren<MeshRenderer>()) mr.enabled = true;
+					foreach (var smr in vrm.GetComponentsInChildren<SkinnedMeshRenderer>()) smr.enabled = true;
+					var sync = vrm.GetComponent<VRMAnimationSync>();
+					if (sync != null)
+					{
+						sync.Setup(ragAnim, Settings.GetSettings(VrmManager.PlayerToName[player]), true);
+					}
 				}
 			}
 		}
@@ -702,7 +711,7 @@ namespace ValheimVRM
 
 			bool online = ___m_nview.GetZDO() != null;
 
-			var vrmController = __instance.gameObject.AddComponent<VrmController>();
+			var vrmController = __instance.GetComponent<VrmController>() ?? __instance.gameObject.AddComponent<VrmController>();
 
 			if (!string.IsNullOrEmpty(playerName))
 			{
@@ -910,6 +919,17 @@ namespace ValheimVRM
 			// 	}
 			// }
 			
+		}
+
+		[HarmonyPatch(typeof(global::VRM.VRMBlendShapeProxy), "OnDestroy")]
+		static class Patch_VRMBlendShapeProxy_OnDestroy
+		{
+			[HarmonyPrefix]
+			static bool Prefix()
+			{
+				// Prevent runtime from touching UnityEditor.* during disconnect/teardown
+				return false;
+			}
 		}
 
 

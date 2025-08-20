@@ -337,10 +337,7 @@ namespace ValheimVRM
             
             public int CallThreshold = 6;
             public int TimeWindowMs = 100;
-            
-            
-            public string UseShaderBundle = "current";
-
+        
             public override void OnUpdate(Dictionary<string, object> oldValues)
             {
                 foreach (var oldValue in oldValues)
