@@ -1,0 +1,24 @@
+name: Workflow Call - Build Mod
+
+on:
+  workflow_call:
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: release
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          name: TESTING Release ${{ steps.build.outputs.version }}
+          tag: ${{ steps.build.outputs.version }}
+          commit: ${{ github.ref }}
+          artifacts: "*.zip"
+          bodyFile: "body.md"
+          makeLatest: true

@@ -1,0 +1,31 @@
+name: Workflow Call - Build Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      project_name:
+        description: 'Project name for the Docker build'
+        type: string
+        required: true
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          tags: builder
+          context: .
+          file: .devcontainer/Dockerfile.devcontainer
+          build-args: |
+            PROJECT_NAME=${{ inputs.project_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

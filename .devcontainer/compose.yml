@@ -1,0 +1,17 @@
+services:
+  dev:
+    tty: true
+    hostname: devcontainer
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile.devcontainer
+      args:
+        PROJECT_NAME: valheim-vrm
+    volumes:
+      # Home
+      - ../volumes/home:/home/vscode:cached
+      # Workspace
+      - ..:/valheim-vrm:cached
+      # Additional custom environments and scripts
+      # - ~/.env:/home/vscode/.env:ro
+      # - ~/scripts:/home/vscode/scripts:ro
