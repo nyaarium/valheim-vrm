@@ -20,7 +20,7 @@ jobs:
           VERSION=$(cat release/version.txt)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if release notes has content (Note may contain newlines)
+      - name: Check if release notes has content
         id: check-release-notes
         run: |
           if [ "$(tr -d ' \t\n\r' < release/body.md | wc -c)" -eq 0 ]; then
