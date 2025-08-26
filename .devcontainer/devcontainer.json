@@ -8,17 +8,19 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"anysphere.csharp",
 				"anysphere.pyright",
-				"redhat.vscode-xml",
+				"antfu.browse-lite",
+				"anysphere.csharp",
 				"BlueGlassBlock.better-json5",
 				"christian-kohler.npm-intellisense",
 				"codeandstuff.package-json-upgrade",
 				"DavidAnson.vscode-markdownlint",
 				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
 				"mechatroner.rainbow-csv",
 				"mhutchie.git-graph",
 				"mikestead.dotenv",
+				"redhat.vscode-xml",
 				"redhat.vscode-yaml",
 				"shd101wyy.markdown-preview-enhanced",
 				"usernamehw.errorlens",
