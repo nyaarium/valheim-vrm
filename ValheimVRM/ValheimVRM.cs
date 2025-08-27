@@ -175,7 +175,7 @@ namespace ValheimVRM
 			{
 				lodGroup.SetLODs(new LOD[]
 				{
-					new LOD(0.1f, vrm.VisualModel.GetComponentsInChildren<SkinnedMeshRenderer>())
+					new LOD(0.03f, vrm.VisualModel.GetComponentsInChildren<SkinnedMeshRenderer>())
 				});
 			}
 			lodGroup.RecalculateBounds();
