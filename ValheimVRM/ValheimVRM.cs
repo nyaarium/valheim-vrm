@@ -193,6 +193,9 @@ namespace ValheimVRM
 
 			Shader foundShader = Shader.Find("Custom/Player");
 
+			Debug.Log($"[ValheimVRM] 🖌️ ProcessMaterialsCoroutine: Processing {materials.Count} materials for VRM '{vrm.Name}'");
+			Debug.Log($"[ValheimVRM] 🖌️ Settings: UseMToonShader={settings.UseMToonShader}, AttemptTextureFix={settings.AttemptTextureFix}, ModelBrightness={settings.ModelBrightness}");
+
 
 			// if (foundShader != null)
 			// {
@@ -206,6 +209,7 @@ namespace ValheimVRM
 
 			foreach (var mat in materials)
 			{
+				Debug.Log($"[ValheimVRM] 🖌️ Processing material: {mat.name}, shader: {mat.shader?.name ?? "NULL"}");
 
 				if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
 				{
@@ -217,46 +221,87 @@ namespace ValheimVRM
 				}
 				else if (settings.AttemptTextureFix)
 				{
+					Debug.Log($"[ValheimVRM] 🖌️ AttemptTextureFix path for material {mat.name}");
+
 					if (mat.shader != foundShader)
 					{
+						Debug.Log($"[ValheimVRM] 🖌️ Converting material {mat.name} from {mat.shader?.name ?? "NULL"} to {foundShader?.name ?? "NULL"}");
+
 						var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} color: {color}");
 
 						var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-						Texture2D tex = mainTex;
+						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} mainTex: {(mainTex != null ? $"{mainTex.name} ({mainTex.width}x{mainTex.height})" : "NULL")}");
+
+						Texture2D tex = mainTex; // Declare tex variable here
 
 						if (mainTex != null)
 						{
-							tex = new Texture2D(mainTex.width, mainTex.height);
-							var pixels = mainTex.GetPixels();
+							Debug.Log($"[ValheimVRM] 🖌️ MainTex properties: readable={mainTex.isReadable}, format={mainTex.format}, mipmapCount={mainTex.mipmapCount}");
 
-							var pixelsTask = Task.Run(() =>
+							// Check if texture is readable before attempting GetPixels
+							if (!mainTex.isReadable)
 							{
-								for (int i = 0; i < pixels.Length; i++)
-								{
-									var col = pixels[i] * color;
-									Color.RGBToHSV(col, out float h, out float s, out float v);
-									v *= settings.ModelBrightness;
-									pixels[i] = Color.HSVToRGB(h, s, v, true);
-									pixels[i].a = col.a;
-								}
-							});
-
-							while (!pixelsTask.IsCompleted)
-							{
-								yield return new WaitUntil(() => pixelsTask.IsCompleted);
+								Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: Texture '{mainTex.name}' is NOT readable! Cannot call GetPixels(). Skipping texture processing for material {mat.name}");
+								// Skip texture processing but continue with shader change
 							}
+							else
+							{
+								Debug.Log($"[ValheimVRM] 🖌️ Texture '{mainTex.name}' is readable, proceeding with GetPixels()");
 
-							pixelsTask.Wait();
+								tex = new Texture2D(mainTex.width, mainTex.height);
 
+								bool textureProcessed = false;
+								string errorMessage = "";
 
+								// Check if we can process the texture
+								if (mainTex.isReadable)
+								{
+									var pixels = mainTex.GetPixels();
+									Debug.Log($"[ValheimVRM] 🖌️ Successfully got {pixels.Length} pixels from texture '{mainTex.name}'");
 
-							tex.SetPixels(pixels);
-							tex.Apply();
+									var pixelsTask = Task.Run(() =>
+									{
+										for (int i = 0; i < pixels.Length; i++)
+										{
+											var col = pixels[i] * color;
+											Color.RGBToHSV(col, out float h, out float s, out float v);
+											v *= settings.ModelBrightness;
+											pixels[i] = Color.HSVToRGB(h, s, v, true);
+											pixels[i].a = col.a;
+										}
+									});
 
+									while (!pixelsTask.IsCompleted)
+									{
+										yield return new WaitUntil(() => pixelsTask.IsCompleted);
+									}
+
+									pixelsTask.Wait();
+
+									tex.SetPixels(pixels);
+									tex.Apply();
+									textureProcessed = true;
+									Debug.Log($"[ValheimVRM] 🖌️ Successfully processed texture for material {mat.name}");
+								}
+								else
+								{
+									errorMessage = $"Texture '{mainTex.name}' is not readable (format: {mainTex.format})";
+									Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: {errorMessage}. Skipping texture processing for material {mat.name}");
+								}
+
+								if (!textureProcessed)
+								{
+									Debug.LogWarning($"[ValheimVRM] 🖌️ Using original texture for material {mat.name} due to: {errorMessage}");
+								}
+							}
 						}
 
 						var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
+						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} bumpMap: {(bumpMap != null ? bumpMap.name : "NULL")}");
+
 						mat.shader = foundShader;
+						Debug.Log($"[ValheimVRM] 🖌️ Changed material {mat.name} shader to {foundShader?.name ?? "NULL"}");
 
 						mat.SetTexture("_MainTex", tex);
 						mat.SetTexture("_SkinBumpMap", bumpMap);
@@ -267,7 +312,17 @@ namespace ValheimVRM
 						mat.SetTexture("_LegsBumpMap", bumpMap);
 						mat.SetFloat("_Glossiness", 0.2f);
 						mat.SetFloat("_MetalGlossiness", 0.0f);
+
+						Debug.Log($"[ValheimVRM] 🖌️ Applied all properties to material {mat.name}");
 					}
+					else
+					{
+						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} already has target shader, skipping conversion");
+					}
+				}
+				else
+				{
+					Debug.Log($"[ValheimVRM] 🖌️ No processing path for material {mat.name}: UseMToonShader={settings.UseMToonShader}, AttemptTextureFix={settings.AttemptTextureFix}");
 				}
 
 				yield return null;
