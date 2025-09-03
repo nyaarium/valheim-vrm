@@ -16,14 +16,14 @@ namespace ValheimVRM
 	[HarmonyPatch(nameof(Shader.Find))]
 	static class ShaderPatch
 	{
-		 private static readonly Dictionary<string, Shader> ShaderDictionary = new Dictionary<string, Shader>();
-		 
-		 
-		 // im not sure but there might be a bug in Shader.Find?
-		 // its returning null anytime the Standard Shader is searched for.
-		 // Searching though Resources.FindObjectsOfTypeAll<Shader>() shows that standard exists in Resources.
-		 // so the bellow is a work around to find it.
-		 
+		private static readonly Dictionary<string, Shader> ShaderDictionary = new Dictionary<string, Shader>();
+
+
+		// im not sure but there might be a bug in Shader.Find?
+		// its returning null anytime the Standard Shader is searched for.
+		// Searching though Resources.FindObjectsOfTypeAll<Shader>() shows that standard exists in Resources.
+		// so the bellow is a work around to find it.
+
 		static ShaderPatch()
 		{
 			Shader[] allShaders = Resources.FindObjectsOfTypeAll<Shader>();
@@ -36,27 +36,27 @@ namespace ValheimVRM
 			}
 			Debug.Log("[ValheimVRM ShaderPatch] All shaders loaded into ShaderDictionary.");
 		}
-		
+
 
 		static bool Prefix(ref Shader __result, string name)
 		{
 			Shader shader;
 			if (ShaderDictionary.TryGetValue(name, out shader))
 			{
-				
+
 				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in preloaded ShaderDictionary.");
 				__result = shader;
 				return false;
 			}
-			
-			
+
+
 			if (VRMShaders.Shaders.TryGetValue(name, out shader))
 			{
 				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in VRMShaders.Shaders");
 				__result = shader;
 				return false;
 			}
-			
+
 
 			Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' NOT FOUND in ShaderDictionary. passing method to original Shader.Find.");
 			return true;
@@ -72,7 +72,7 @@ namespace ValheimVRM
 		{
 			if (_initialized) return;
 			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVrm.shaders");
-			
+
 			if (File.Exists(bundlePath))
 			{
 				var assetBundle = AssetBundle.LoadFromFile(bundlePath);
@@ -100,11 +100,11 @@ namespace ValheimVRM
 		public static Dictionary<Player, GameObject> PlayerToVrmInstance = new Dictionary<Player, GameObject>();
 		public static Dictionary<Player, string> PlayerToName = new Dictionary<Player, string>();
 		public static Dictionary<string, VRM> VrmDic = new Dictionary<string, VRM>();
-		
+
 		public static VRM RegisterVrm(VRM vrm, LODGroup sampleLODGroup, Player player)
-		{ 
+		{
 			if (vrm.VisualModel == null) return null;
-			
+
 			foreach (var registered in VrmDic)
 			{
 				if (registered.Key == vrm.Name) continue;
@@ -115,13 +115,13 @@ namespace ValheimVRM
 					return null;
 				}
 			}
- 
+
 			if (VrmDic.ContainsKey(vrm.Name))
 			{
 				var existing = VrmDic[vrm.Name];
-				
+
 				if (existing == vrm) return vrm;
-				
+
 				if (existing.VisualModel != vrm.VisualModel)
 				{
 					Object.Destroy(existing.VisualModel);
@@ -131,7 +131,7 @@ namespace ValheimVRM
 			}
 
 			Object.DontDestroyOnLoad(vrm.VisualModel);
-			
+
 			VrmDic[vrm.Name] = vrm;
 
 			//[Error: Unity Log] _Cutoff: Range
@@ -168,7 +168,7 @@ namespace ValheimVRM
 
 
 			CoroutineHelper.Instance.StartCoroutine(ProcessMaterialsCoroutine(vrm, materials, settings));
- 
+
 
 			var lodGroup = vrm.VisualModel.AddComponent<LODGroup>();
 			if (settings.EnablePlayerFade)
@@ -186,95 +186,95 @@ namespace ValheimVRM
 			vrm.VisualModel.SetActive(false);
 
 			return vrm;
-    }
+		}
 
-    public static IEnumerator ProcessMaterialsCoroutine(VRM vrm, List<Material> materials, Settings.VrmSettingsContainer settings)
-    {
-	    
-        Shader foundShader = Shader.Find("Custom/Player");
+		public static IEnumerator ProcessMaterialsCoroutine(VRM vrm, List<Material> materials, Settings.VrmSettingsContainer settings)
+		{
+
+			Shader foundShader = Shader.Find("Custom/Player");
 
 
-        // if (foundShader != null)
-        // {
-	       //  var count = foundShader.GetPropertyCount();
-	       //  for (int i = 0; i < count; i++)
-	       //  {
-		      //   Debug.Log($"Shader Name: {foundShader.name} Prop: {i} -> {foundShader.GetPropertyName(i)}");
-        //
-	       //  }
-        // }
-        
-        foreach (var mat in materials)
-        {
+			// if (foundShader != null)
+			// {
+			//  var count = foundShader.GetPropertyCount();
+			//  for (int i = 0; i < count; i++)
+			//  {
+			//   Debug.Log($"Shader Name: {foundShader.name} Prop: {i} -> {foundShader.GetPropertyName(i)}");
+			//
+			//  }
+			// }
 
-            if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
-            {
-                var color = mat.GetColor("_Color");
-                color.r *= settings.ModelBrightness;
-                color.g *= settings.ModelBrightness;
-                color.b *= settings.ModelBrightness;
-                mat.SetColor("_Color", color);
-            }
-            else if(settings.AttemptTextureFix)
-            {
-                if (mat.shader != foundShader)
-                {
-                    var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+			foreach (var mat in materials)
+			{
 
-                    var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-                    Texture2D tex = mainTex;
-                    
-                    if (mainTex != null)
-                    {
-	                    tex = new Texture2D(mainTex.width, mainTex.height);
-                        var pixels = mainTex.GetPixels();
-                        
-                        var pixelsTask = Task.Run(() =>
-                        {
-	                        for (int i = 0; i < pixels.Length; i++)
-	                        {
-		                        var col = pixels[i] * color;   
-		                        Color.RGBToHSV(col, out float h, out float s, out float v);
-		                        v *= settings.ModelBrightness;
-		                        pixels[i] = Color.HSVToRGB(h, s, v, true);
-		                        pixels[i].a = col.a;
-	                        }
-                        });
+				if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
+				{
+					var color = mat.GetColor("_Color");
+					color.r *= settings.ModelBrightness;
+					color.g *= settings.ModelBrightness;
+					color.b *= settings.ModelBrightness;
+					mat.SetColor("_Color", color);
+				}
+				else if (settings.AttemptTextureFix)
+				{
+					if (mat.shader != foundShader)
+					{
+						var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
 
-                        while (!pixelsTask.IsCompleted)
-                        {
-	                        yield return new WaitUntil(() => pixelsTask.IsCompleted);
-                        }
+						var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
+						Texture2D tex = mainTex;
 
-                        pixelsTask.Wait();
-                        
-                        
- 
-                        tex.SetPixels(pixels);
-                        tex.Apply();
+						if (mainTex != null)
+						{
+							tex = new Texture2D(mainTex.width, mainTex.height);
+							var pixels = mainTex.GetPixels();
 
-                    }
-                    
-                    var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
-                    mat.shader = foundShader;
+							var pixelsTask = Task.Run(() =>
+							{
+								for (int i = 0; i < pixels.Length; i++)
+								{
+									var col = pixels[i] * color;
+									Color.RGBToHSV(col, out float h, out float s, out float v);
+									v *= settings.ModelBrightness;
+									pixels[i] = Color.HSVToRGB(h, s, v, true);
+									pixels[i].a = col.a;
+								}
+							});
 
-                    mat.SetTexture("_MainTex", tex);
-                    mat.SetTexture("_SkinBumpMap", bumpMap);
-                    mat.SetColor("_SkinColor", color);
-                    mat.SetTexture("_ChestTex", tex);
-                    mat.SetTexture("_ChestBumpMap", bumpMap);
-                    mat.SetTexture("_LegsTex", tex);
-                    mat.SetTexture("_LegsBumpMap", bumpMap);
-                    mat.SetFloat("_Glossiness", 0.2f);
-                    mat.SetFloat("_MetalGlossiness", 0.0f);
-                }
-            }
+							while (!pixelsTask.IsCompleted)
+							{
+								yield return new WaitUntil(() => pixelsTask.IsCompleted);
+							}
 
-            yield return null;
-        }
-        Debug.Log("[ValheimVRM] Material processing completed.");
-    }
-}
+							pixelsTask.Wait();
+
+
+
+							tex.SetPixels(pixels);
+							tex.Apply();
+
+						}
+
+						var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
+						mat.shader = foundShader;
+
+						mat.SetTexture("_MainTex", tex);
+						mat.SetTexture("_SkinBumpMap", bumpMap);
+						mat.SetColor("_SkinColor", color);
+						mat.SetTexture("_ChestTex", tex);
+						mat.SetTexture("_ChestBumpMap", bumpMap);
+						mat.SetTexture("_LegsTex", tex);
+						mat.SetTexture("_LegsBumpMap", bumpMap);
+						mat.SetFloat("_Glossiness", 0.2f);
+						mat.SetFloat("_MetalGlossiness", 0.0f);
+					}
+				}
+
+				yield return null;
+			}
+			Debug.Log("[ValheimVRM] Material processing completed.");
+		}
+	}
 
 
 	[HarmonyPatch(typeof(VisEquipment), "UpdateLodgroup")]
@@ -286,7 +286,7 @@ namespace ValheimVRM
 			if (!__instance.m_isPlayer) return;
 			var player = __instance.GetComponent<Player>();
 			if (player == null || !VrmManager.PlayerToVrmInstance.ContainsKey(player)) return;
-			
+
 			var name = VrmManager.PlayerToName[player];
 
 			var settings = Settings.GetSettings(name);
@@ -353,7 +353,7 @@ namespace ValheimVRM
 			// 武器位置合わせ
 			float equipmentScale = settings.EquipmentScale;
 			Vector3 equipmentScaleVector = new Vector3(equipmentScale, equipmentScale, equipmentScale);
-			
+
 			var leftItem = __instance.GetField<VisEquipment, GameObject>("m_leftItemInstance");
 			if (leftItem != null)
 			{
@@ -367,7 +367,7 @@ namespace ValheimVRM
 				rightItem.transform.localPosition = settings.RightHandItemPos;
 				rightItem.transform.localScale = equipmentScaleVector;
 			}
-			
+
 			// divided  by 100 to keep the settings file positions in the same number range. (position offset appears to be on the world, not local)
 			var rightBackItem = __instance.GetField<VisEquipment, GameObject>("m_rightBackItemInstance");
 			if (rightBackItem != null)
@@ -376,14 +376,15 @@ namespace ValheimVRM
 				var rightBackNameString = rightBackName?.ToString() ?? string.Empty;
 				var isKnife = rightBackNameString.StartsWith("Knife", StringComparison.Ordinal);
 				var isStaff = rightBackNameString.StartsWith("Staff", StringComparison.Ordinal);
-				
+
 				Vector3 offset = Vector3.zero;
-				
+
 				if (isKnife)
 				{
 					offset = settings.KnifeSidePos;
 					rightBackItem.transform.Rotate(settings.KnifeSideRot);
-				} else if (isStaff)
+				}
+				else if (isStaff)
 				{
 					offset = settings.StaffPos;
 					rightBackItem.transform.Rotate(settings.StaffRot);
@@ -396,11 +397,11 @@ namespace ValheimVRM
 				rightBackItem.transform.localPosition = offset / 100.0f;
 				rightBackItem.transform.localScale = equipmentScaleVector / 100.0f;
 			}
-			
+
 			var leftBackItem = __instance.GetField<VisEquipment, GameObject>("m_leftBackItemInstance");
 			if (leftBackItem != null)
 			{
-				
+
 				var leftBackName = Utils.GetField<VisEquipment>("m_leftBackItem").GetValue(__instance);
 				//Debug.Log(leftBackName.ToString());
 				var leftBackNameString = leftBackName?.ToString() ?? string.Empty;
@@ -409,7 +410,8 @@ namespace ValheimVRM
 				if (isBow)
 				{
 					leftBackItem.transform.localPosition = settings.BowBackPos / 100.0f;
-				} else if (isStaffSkeleton)
+				}
+				else if (isStaffSkeleton)
 				{
 					leftBackItem.transform.localPosition = settings.StaffSkeletonPos / 100.0f;
 				}
@@ -441,7 +443,7 @@ namespace ValheimVRM
 					smr.forceRenderingOff = true;
 					smr.updateWhenOffscreen = true;
 				}
-			
+
 
 				var ragAnim = ragdoll.gameObject.AddComponent<Animator>();
 				ragAnim.keepAnimatorStateOnDisable = true;
@@ -466,7 +468,7 @@ namespace ValheimVRM
 			}
 		}
 	}
-	
+
 	[HarmonyPatch(typeof(Character), "SetVisible")]
 	static class Patch_Character_SetVisible
 	{
@@ -500,10 +502,10 @@ namespace ValheimVRM
 			{
 				// Log or handle the case where VRM instance is null
 			}
-        }
+		}
 	}
 
-    [HarmonyPatch(typeof(Player), "OnDeath")]
+	[HarmonyPatch(typeof(Player), "OnDeath")]
 	static class Patch_Player_OnDeath
 	{
 		[HarmonyPostfix]
@@ -538,11 +540,11 @@ namespace ValheimVRM
 				__result = head.position;
 				return false;
 			}
-			
+
 			return true;
 		}
 	}
-	
+
 
 	// Remove stealth factor check, show stealth hud only if crouching
 	[HarmonyPatch(typeof(Hud), "UpdateStealth")]
@@ -551,7 +553,7 @@ namespace ValheimVRM
 		[HarmonyReversePatch()]
 		static void Postfix(Hud __instance, Player player, float bowDrawPercentage)
 		{
-			if (player.IsCrouching() && (double) bowDrawPercentage == 0.0)
+			if (player.IsCrouching() && (double)bowDrawPercentage == 0.0)
 			{
 				if (player.IsSensed())
 				{
@@ -595,10 +597,10 @@ namespace ValheimVRM
 				ref Attack attack = ref AccessTools.FieldRefAccess<Player, Attack>("m_currentAttack").Invoke(player);
 
 				if (attack == null) return;
-				
+
 				ref float time = ref AccessTools.FieldRefAccess<Attack, float>("m_time").Invoke(attack);
 				if (time != 0) return;
-				
+
 				string playerName;
 				if (VrmManager.PlayerToName.TryGetValue(player, out playerName))
 				{
@@ -606,18 +608,18 @@ namespace ValheimVRM
 					{
 						var settings = Settings.GetSettings(playerName);
 						attack.m_attackRange *= settings.AttackDistanceScale;
-						
+
 						//TODO: find out if this should be removed.
 						attack.m_attackHeight *= settings.PlayerHeight / 1.85f;
 						attack.m_attackOffset *= settings.PlayerHeight / 1.85f;
-						
+
 						//var anim = attack.GetField<Attack, ZSyncAnimation>("m_zanim");
 						//var nview = anim.GetField<ZSyncAnimation, ZNetView>("m_nview");
 						//ref var animSpeedID = ref AccessTools.StaticFieldRefAccess<ZSyncAnimation, int>("m_animSpeedID");
 						//nview.GetZDO().Set(animSpeedID, nview.GetZDO().GetFloat(animSpeedID) * settings.AttackSpeedScale);
 						//var animator = anim.GetField<ZSyncAnimation, Animator>("m_animator");
 						//animator.speed *= settings.AttackSpeedScale;
-						
+
 					}
 				}
 			}
@@ -652,7 +654,7 @@ namespace ValheimVRM
 			}
 		}
 	}
-	
+
 	[HarmonyPatch(typeof(Player), "OnDestroy")]
 	static class Patch_Player_OnDestroy
 	{
@@ -660,10 +662,10 @@ namespace ValheimVRM
 		static void Postfix(Player __instance)
 		{
 			VrmManager.PlayerToName.Remove(__instance);
-            VrmManager.PlayerToVrmInstance.Remove(__instance);
+			VrmManager.PlayerToVrmInstance.Remove(__instance);
 		}
 	}
-	
+
 
 	[HarmonyPatch(typeof(Player), "Awake")]
 	static class Patch_Player_Awake
@@ -688,9 +690,9 @@ namespace ValheimVRM
 				if (index >= 0 && index < profiles.Count) playerName = profiles[index].GetName();
 				localPlayerName = playerName;
 			}
-			
+
 			VrmManager.PlayerToName[__instance] = playerName;
-			
+
 			bool isInMenu = __instance.gameObject.scene.name == "start";
 
 			if (isInMenu)
@@ -706,7 +708,7 @@ namespace ValheimVRM
 					}
 				}
 
-                VrmController.CleanupLoadings();
+				VrmController.CleanupLoadings();
 			}
 
 			bool online = ___m_nview.GetZDO() != null;
@@ -716,7 +718,7 @@ namespace ValheimVRM
 			if (!string.IsNullOrEmpty(playerName))
 			{
 				bool settingsUpdated = false;
-				
+
 				var path = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", $"{playerName}.vrm");
 				var sharedPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "Shared", $"{playerName}.vrm");
 
@@ -735,7 +737,7 @@ namespace ValheimVRM
 				}
 
 				VRM vrm = null;
-				
+
 				var settings = Settings.GetSettings(playerName);
 
 				if (settings != null)
@@ -744,44 +746,44 @@ namespace ValheimVRM
 					{
 						if (File.Exists(path))
 						{
-							
-							
+
+
 							if (localPlayerName == playerName)
 							{
 								var bytes = File.ReadAllBytes(path);
-								var vrmVisual  =  VRM.ImportVisual(bytes, path, settings.ModelScale);
+								var vrmVisual = VRM.ImportVisual(bytes, path, settings.ModelScale);
 								if (vrmVisual != null)
 								{
-									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName );
+									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName);
 								}
-				
+
 							}
 							else
 							{
 								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, path, settings.ModelScale, settingsUpdated, settings, false));
 							}
-							
-							
+
+
 						}
 						else if (File.Exists(sharedPath))
 						{ // isShared true
-							
+
 							if (localPlayerName == playerName) // i do not think sharing is implmented, even if it is, i dont think there can be a local player instance here
-							                                   // or at least shouldn't be.
+															   // or at least shouldn't be.
 							{
 								var bytes = File.ReadAllBytes(sharedPath);
-								var vrmVisual  =  VRM.ImportVisual(bytes, sharedPath, settings.ModelScale);
+								var vrmVisual = VRM.ImportVisual(bytes, sharedPath, settings.ModelScale);
 								if (vrmVisual != null)
 								{
-									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName, true );
+									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName, true);
 								}
 							}
 							else
 							{
-								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName,localPlayerName, sharedPath, settings.ModelScale, settingsUpdated, settings,true));
+								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, sharedPath, settings.ModelScale, settingsUpdated, settings, true));
 
 							}
-							
+
 						}
 						else
 						{ //default character stuff
@@ -791,30 +793,30 @@ namespace ValheimVRM
 
 								if (File.Exists(defaultPath))
 								{
-									
+
 									if (localPlayerName == playerName)
 									{
 										var bytes = File.ReadAllBytes(defaultPath);
-										var vrmVisual  =  VRM.ImportVisual(bytes, defaultPath, settings.ModelScale);
+										var vrmVisual = VRM.ImportVisual(bytes, defaultPath, settings.ModelScale);
 										if (vrmVisual != null)
 										{
 											vrm = CreateVrm(vrmVisual, __instance, bytes, playerName);
 										}
-				
+
 									}
 									else
 									{
 										CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, "___Default", localPlayerName, defaultPath, settings.ModelScale, settingsUpdated, settings, false));
 									}
-									
-									
+
+
 								}
 							}
 							else
 							{
 								vrm = VrmManager.VrmDic["___Default"];
 							}
-		
+
 						}
 
 					}
@@ -840,17 +842,17 @@ namespace ValheimVRM
 				{
 					vrm.RecalculateSettingsHash();
 				}
- 
+
 
 				CoroutineHelper.Instance.StartCoroutine(vrm.SetToPlayer(player));
 			}
 		}
-		
+
 		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, bool isShared = false)
 		{
 			VRM vrm = new VRM(vrmVisual, name);
 			vrm = VrmManager.RegisterVrm(vrm, player.GetComponentInChildren<LODGroup>(), player);
-			
+
 			if (vrm != null)
 			{
 				vrm.Src = bytes;
@@ -861,17 +863,17 @@ namespace ValheimVRM
 					vrm.Source = VRM.SourceType.Shared;
 				}
 			}
-			
+
 			return vrm;
 		}
-		
-		
+
+
 		private static IEnumerator LoadVrm(Player player, string playerName, string localPlayerName, string path, float scale, bool settingsUpdated, Settings.VrmSettingsContainer settings, bool isShared = false)
 		{
 
- 
+
 			Task<byte[]> bytesTask = Task.Run(() => File.ReadAllBytes(path));
-			
+
 			while (!bytesTask.IsCompleted)
 			{
 				yield return new WaitUntil(() => bytesTask.IsCompleted);
@@ -882,7 +884,7 @@ namespace ValheimVRM
 				Debug.LogError($"Error loading VRM: {bytesTask.Exception.Flatten().InnerException}");
 				yield break;
 			}
-			
+
 			yield return player.StartCoroutine(VRM.ImportVisualAsync(bytesTask.Result, path, settings.ModelScale, loadedRoot =>
 			{
 				if (loadedRoot != null)
@@ -918,7 +920,7 @@ namespace ValheimVRM
 			// 		SetVrm(player, vrm, settingsUpdated);
 			// 	}
 			// }
-			
+
 		}
 
 		[HarmonyPatch(typeof(global::VRM.VRMBlendShapeProxy), "OnDestroy")]
@@ -933,8 +935,8 @@ namespace ValheimVRM
 		}
 
 
-		
- 
+
+
 
 	}
 }

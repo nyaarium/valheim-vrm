@@ -30,7 +30,7 @@ namespace ValheimVRM
 			this.vrmAnim.feetPivotActive = orgAnim.feetPivotActive;
 			this.vrmAnim.layersAffectMassCenter = orgAnim.layersAffectMassCenter;
 			this.vrmAnim.stabilizeFeet = orgAnim.stabilizeFeet;
-			
+
 			PoseHandlerCreate(orgAnim, vrmAnim);
 		}
 
@@ -51,22 +51,22 @@ namespace ValheimVRM
 
 		//private static int prevHash = 0;
 
-		const int FirstTime         = -161139084;
-		const int Usually           =  229373857;  // standing idle
-		const int FirstRise         = -1536343465; // stand up upon login
-		const int RiseUp            = -805461806;
-		const int StartToSitDown    =  890925016;
-		const int SittingIdle       = -1544306596;
+		const int FirstTime = -161139084;
+		const int Usually = 229373857;  // standing idle
+		const int FirstRise = -1536343465; // stand up upon login
+		const int RiseUp = -805461806;
+		const int StartToSitDown = 890925016;
+		const int SittingIdle = -1544306596;
 		const int StandingUpFromSit = -805461806;
-		const int SittingChair      = -1829310159;
-		const int SittingThrone     =  1271596;
-		const int SittingShip       = -675369009;
-		const int StartSleeping     =  337039637;
-		const int Sleeping          = -1603096;
-		const int GetUpFromBed      = -496559199;
-		const int Crouch            = -2015693266;
-		const int HoldingMast       = -2110678410;
-		const int HoldingDragon     = -2076823180; // that thing in a front of longship
+		const int SittingChair = -1829310159;
+		const int SittingThrone = 1271596;
+		const int SittingShip = -675369009;
+		const int StartSleeping = 337039637;
+		const int Sleeping = -1603096;
+		const int GetUpFromBed = -496559199;
+		const int Crouch = -2015693266;
+		const int HoldingMast = -2110678410;
+		const int HoldingDragon = -2076823180; // that thing in a front of longship
 
 		private static List<int> adjustHipHashes = new List<int>()
 		{
@@ -89,19 +89,19 @@ namespace ValheimVRM
 
 				case SittingThrone:
 					return settings.SittingOnThroneOffset;
-				
+
 				case SittingShip:
 					return settings.SittingOnShipOffset;
-				
+
 				case HoldingMast:
 					return settings.HoldingMastOffset;
-				
+
 				case HoldingDragon:
 					return settings.HoldingDragonOffset;
-				
+
 				case Sleeping:
 					return settings.SleepingOffset;
-				
+
 				default:
 					interpSpeed = 1;
 					return Vector3.zero;
@@ -119,9 +119,12 @@ namespace ValheimVRM
 
 					if (i > 0 && orgTrans != null && vrmTrans != null)
 					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot) {
+						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot)
+						{
 							orgTrans.position = vrmTrans.position;
-						} else {
+						}
+						else
+						{
 							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
 						}
 					}
@@ -153,9 +156,9 @@ namespace ValheimVRM
 			}
 
 			float playerScaleFactor = settings.PlayerHeight / 1.85f;
-			
+
 			vrmAnim.transform.localPosition = Vector3.zero;
-			
+
 			orgPose.GetHumanPose(ref hp);
 			vrmPose.SetHumanPose(ref hp);
 
@@ -171,30 +174,30 @@ namespace ValheimVRM
 
 			var vrmHip = vrmAnim.GetBoneTransform(HumanBodyBones.Hips);
 			var orgHip = orgAnim.GetBoneTransform(HumanBodyBones.Hips);
-			
+
 			vrmHip.position = orgAnim.GetBoneTransform(HumanBodyBones.Hips).position;
 
 			Vector3 actualAdjustHipPos;
 			float actualInterpSpeed;
 
 			//---------
-			
+
 			var curAdjustPos = Vector3.zero;
 
 			if (!adjustHipHashes.Contains(curStateHash))
 			{
 				Vector3 curOrgHipPos = orgHip.position - orgHip.parent.position;
 				Vector3 curVrmHipPos = curOrgHipPos * playerScaleFactor;
-				
+
 				curAdjustPos = curVrmHipPos - curOrgHipPos;
 			}
 
 			float curInterpSpeed = Time.deltaTime * 5;
 			Vector3 curOffset = StateHashToOffset(curStateHash, out curInterpSpeed);
 			if (curOffset != Vector3.zero) curAdjustPos += orgHip.transform.rotation * curOffset;
-			
+
 			//---------
-			
+
 			var nextAdjustPos = Vector3.zero;
 
 			if (nextStateHash != 0)
@@ -203,7 +206,7 @@ namespace ValheimVRM
 				{
 					Vector3 nextOrgHipPos = orgHip.position - orgHip.parent.position;
 					Vector3 nextVrmHipPos = nextOrgHipPos * playerScaleFactor;
-				
+
 					nextAdjustPos = nextVrmHipPos - nextOrgHipPos;
 				}
 
@@ -225,23 +228,26 @@ namespace ValheimVRM
 			}
 
 			//---------
-			
+
 			adjustPos = adjustPos.HasValue ? Vector3.Lerp(adjustPos.Value, actualAdjustHipPos, actualInterpSpeed) : curAdjustPos;
-			
+
 			vrmHip.position += adjustPos.Value;
-			
+
 			if (!ragdoll)
 			{
 				for (var i = 0; i < 55; i++)
 				{
 					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
 					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-            
+
 					if (i > 0 && orgTrans != null && vrmTrans != null)
 					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot) {
+						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot)
+						{
 							orgTrans.position = vrmTrans.position;
-						} else {
+						}
+						else
+						{
 							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
 						}
 					}

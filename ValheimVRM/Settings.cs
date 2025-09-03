@@ -12,8 +12,8 @@ using Object = UnityEngine.Object;
 
 namespace ValheimVRM
 {
-	public static class Settings
-	{
+    public static class Settings
+    {
         // We should use precompiled type as a container so we could avoid parsing values repeatedly
         public abstract class Container
         {
@@ -32,12 +32,12 @@ namespace ValheimVRM
             {
                 var defaults = Activator.CreateInstance(GetType());
                 Dictionary<string, object> changes = new Dictionary<string, object>();
-                
+
                 List<string> unknownNames = data.Keys.ToList();
                 foreach (var field in GetType().GetFields())
                 {
                     if (field.GetCustomAttribute(typeof(NonSerializedAttribute)) != null) continue;
-                    
+
                     var old = field.GetValue(this);
                     object value = field.GetValue(defaults);
                     string valueStr;
@@ -149,40 +149,40 @@ namespace ValheimVRM
             {
                 var defaults = Activator.CreateInstance(GetType());
                 Dictionary<string, object> changes = new Dictionary<string, object>();
-                
+
                 foreach (var field in GetType().GetFields())
                 {
                     if (field.GetCustomAttribute(typeof(NonSerializedAttribute)) != null) continue;
-                    
+
                     var old = field.GetValue(this);
                     var value = field.GetValue(defaults);
                     field.SetValue(this, value);
                     if (!old.Equals(value)) changes[field.Name] = old;
                 }
-                
+
                 OnUpdate(changes);
             }
 
             public void CopyFrom(Container another)
             {
                 Dictionary<string, object> changes = new Dictionary<string, object>();
-                
+
                 foreach (var field in GetType().GetFields())
                 {
                     if (field.GetCustomAttribute(typeof(NonSerializedAttribute)) != null) continue;
-                    
+
                     var old = field.GetValue(this);
                     var value = field.GetValue(another);
                     field.SetValue(this, value);
                     if (!old.Equals(value)) changes[field.Name] = old;
                 }
-                
+
                 OnUpdate(changes);
             }
 
             public virtual void OnUpdate(Dictionary<string, object> oldValues)
             {
-                
+
             }
         }
 
@@ -190,7 +190,7 @@ namespace ValheimVRM
         {
             [NonSerializedAttribute]
             public string Name;
-            
+
             public float ModelScale = 1.1f;
             public float ModelOffsetY = 0.0f;
             public float PlayerHeight = 1.85f;
@@ -198,7 +198,7 @@ namespace ValheimVRM
 
             public float HeightAspect => PlayerHeight / 1.85f;
             public float RadiusAspect => PlayerRadius / 0.5f;
-            
+
             public Vector3 SittingOnChairOffset = Vector3.zero;
             public Vector3 SittingOnThroneOffset = Vector3.zero;
             public Vector3 SittingOnShipOffset = Vector3.zero;
@@ -252,13 +252,13 @@ namespace ValheimVRM
 
 
 
-            
+
 
 
             public override void OnUpdate(Dictionary<string, object> oldValues)
             {
                 if (!VrmManager.VrmDic.ContainsKey(Name)) return;
-                
+
                 Player player = null;
 
                 foreach (var p in Player.GetAllPlayers())
@@ -284,31 +284,31 @@ namespace ValheimVRM
                                 VrmManager.PlayerToVrmInstance[player].transform.localScale = Vector3.one * ModelScale;
                             }
                             break;
-                        
+
                         case nameof(PlayerHeight):
                             player.GetComponent<CapsuleCollider>().height = PlayerHeight;
                             player.GetComponent<CapsuleCollider>().center = new Vector3(0, PlayerHeight / 2, 0);
                             player.GetComponent<Rigidbody>().centerOfMass = new Vector3(0, PlayerHeight / 2, 0);
                             break;
-                        
+
                         case nameof(PlayerRadius):
                             player.GetComponent<CapsuleCollider>().radius = PlayerRadius;
                             break;
-                        
+
                         case nameof(SpringBoneStiffness):
                             foreach (var bone in player.GetComponent<VrmController>().visual.GetComponentsInChildren<VRMSpringBone>())
                             {
                                 bone.m_stiffnessForce = bone.m_stiffnessForce / (float)oldValue.Value * SpringBoneStiffness;
                             }
                             break;
-                        
+
                         case nameof(SpringBoneGravityPower):
                             foreach (var bone in player.GetComponent<VrmController>().visual.GetComponentsInChildren<VRMSpringBone>())
                             {
                                 bone.m_gravityPower = bone.m_gravityPower / (float)oldValue.Value * SpringBoneGravityPower;
                             }
                             break;
-                        
+
                         case nameof(InteractionDistanceScale):
                             player.m_maxInteractDistance = player.m_maxInteractDistance / (float)oldValue.Value * InteractionDistanceScale;
                             player.m_maxPlaceDistance = player.m_maxPlaceDistance / (float)oldValue.Value * InteractionDistanceScale;
@@ -317,7 +317,7 @@ namespace ValheimVRM
                         case nameof(SwimDepthScale):
                             player.m_swimDepth = player.m_swimDepth / (float)oldValue.Value * SwimDepthScale;
                             break;
-                        
+
                     }
                 }
             }
@@ -333,11 +333,11 @@ namespace ValheimVRM
             public bool AllowIndividualWinds = true;
             public bool EnableProfileCode = false;
             public int ProfileLogThresholdMs = 20;
-            
-            
+
+
             public int CallThreshold = 6;
             public int TimeWindowMs = 100;
-        
+
             public override void OnUpdate(Dictionary<string, object> oldValues)
             {
                 foreach (var oldValue in oldValues)
@@ -345,20 +345,20 @@ namespace ValheimVRM
                     switch (oldValue.Key)
                     {
                         case nameof(DrawPlayerSizeGizmo):
-                        {
-                            var controller = VrmController.GetLocalController();
-                            if (controller != null)
                             {
-                                if (DrawPlayerSizeGizmo)
+                                var controller = VrmController.GetLocalController();
+                                if (controller != null)
                                 {
-                                    controller.ActivateSizeGizmo();
-                                }
-                                else
-                                {
-                                    controller.DeactivateSizeGizmo();
+                                    if (DrawPlayerSizeGizmo)
+                                    {
+                                        controller.ActivateSizeGizmo();
+                                    }
+                                    else
+                                    {
+                                        controller.DeactivateSizeGizmo();
+                                    }
                                 }
                             }
-                        }
                             break;
                         case nameof(ForceWindDisabled):
                             foreach (var controller in Object.FindObjectsOfType<VrmController>())
@@ -379,7 +379,7 @@ namespace ValheimVRM
 
         public static string ValheimVRMDir => Path.Combine(Environment.CurrentDirectory, "ValheimVRM");
 
-		public static string PlayerSettingsPath(string playerName, bool shared) => Path.Combine(ValheimVRMDir, shared ? "Shared" : "", $"settings_{playerName}.txt");
+        public static string PlayerSettingsPath(string playerName, bool shared) => Path.Combine(ValheimVRMDir, shared ? "Shared" : "", $"settings_{playerName}.txt");
         private static Dictionary<string, VrmSettingsContainer> playerSettings = new Dictionary<string, VrmSettingsContainer>();
 
         public static readonly GlobalSettingsContainer globalSettings = new GlobalSettingsContainer();
@@ -387,7 +387,7 @@ namespace ValheimVRM
         public static VrmSettingsContainer GetSettings(string playerName)
         {
             // if player settings dont exist, load default ones.
-            return playerSettings.ContainsKey(playerName) ? playerSettings[playerName] : playerSettings.ContainsKey("___Default") ? playerSettings["___Default"] : null ;
+            return playerSettings.ContainsKey(playerName) ? playerSettings[playerName] : playerSettings.ContainsKey("___Default") ? playerSettings["___Default"] : null;
         }
 
         public static void AddSettingsFromFile(string playerName, bool shared)
@@ -421,15 +421,15 @@ namespace ValheimVRM
             playerSettings[playerName].LoadFrom(settingsData);
 
             int maxNameWidth = settingsData.Max(kvp => kvp.Key.Length);
-            
+
             Debug.Log("[ValheimVRM] loaded settings for " + playerName + ":\n" + playerSettings[playerName].ToString());
         }
-        
+
         public static bool ContainsSettings(string playerName)
         {
             return playerSettings.ContainsKey(playerName);
         }
-        
+
         public static IEnumerable<KeyValuePair<string, string>> ParseSettings(IEnumerable<string> lines)
         {
             foreach (var line in lines)
@@ -459,14 +459,14 @@ namespace ValheimVRM
                 {
                     settingsData[setting.Key] = setting.Value;
                 }
-                
+
                 globalSettings.LoadFrom(settingsData);
             }
             else
             {
                 globalSettings.Reset();
             }
-            
+
             Debug.Log("[ValheimVRM] loaded global settings:\n" + globalSettings.ToString());
         }
 

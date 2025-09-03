@@ -31,6 +31,6 @@ namespace ValheimVRM
                 Destroy(this.gameObject);
             }
         }
- 
+
     }
 }
