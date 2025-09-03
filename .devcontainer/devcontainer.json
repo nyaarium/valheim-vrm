@@ -48,6 +48,9 @@
 				"[typescriptreact]": {
 					"editor.defaultFormatter": "esbenp.prettier-vscode"
 				},
+				"[csharp]": {
+					"editor.defaultFormatter": "anysphere.csharp"
+				},
 				"autoimport.doubleQuotes": true,
 				"autoimport.filesToScan": "**/*.{js,jsx,ts,tsx}",
 				"cursor.cmdk.useThemedDiffBackground": true,

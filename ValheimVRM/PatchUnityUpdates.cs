@@ -12,7 +12,7 @@ namespace ValheimVRM
     public static class PatchAllUpdateMethods
     {
         private static Dictionary<string, List<long>> methodCallTimestamps = new Dictionary<string, List<long>>();
-        
+
         public static void ApplyPatches(Harmony harmony)
         {
             var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -90,7 +90,7 @@ namespace ValheimVRM
         public static void GenericPrefix(out GenericPState __state)
         {
             var stackTrace = new StackTrace();
-            var frame = stackTrace.GetFrame(1); 
+            var frame = stackTrace.GetFrame(1);
             var method = frame.GetMethod();
             __state = new GenericPState
             {

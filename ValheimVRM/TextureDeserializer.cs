@@ -12,7 +12,7 @@ namespace ValheimVRM
     public sealed class TextureDeserializerAsync : UniGLTF.ITextureDeserializer
     {
         private static int textureLoadCounter = 0;
-        
+
         private Texture2D LoadIndexedPngWithUnity(byte[] pngData)
         {
             try
@@ -25,7 +25,7 @@ namespace ValheimVRM
                     var rgbaTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false);
                     rgbaTexture.SetPixels32(texture.GetPixels32());
                     rgbaTexture.Apply();
-                    
+
                     Object.DestroyImmediate(texture);
                     return rgbaTexture;
                 }
@@ -45,10 +45,10 @@ namespace ValheimVRM
                 Debug.LogError("[ValheimVRM] TextureInfo or ImageData is null");
                 return CreateFallbackTexture();
             }
-            
+
             Texture2D texture = null;
             int currentTextureIndex = ++textureLoadCounter;
-            
+
             // Debug PNG header detection
             if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 25)
             {
@@ -57,8 +57,8 @@ namespace ValheimVRM
             }
 
             // Check if this is an indexed PNG (color type 3)
-            bool isIndexedPng = textureInfo.DataMimeType == "image/png" && 
-                               textureInfo.ImageData.Length >= 25 && 
+            bool isIndexedPng = textureInfo.DataMimeType == "image/png" &&
+                               textureInfo.ImageData.Length >= 25 &&
                                textureInfo.ImageData[25] == 3;
 
             if (isIndexedPng)
@@ -103,7 +103,7 @@ namespace ValheimVRM
             try
             {
                 texture = await AsyncImageLoader.CreateFromImageAsync(textureInfo.ImageData, settings);
-                
+
                 if (texture == null)
                 {
                     // Try synchronous method as fallback
@@ -131,7 +131,7 @@ namespace ValheimVRM
                             LogTextureSuccess(textureInfo, currentTextureIndex);
                         }
                     }
-                    
+
                     // If still null, create a fallback texture
                     if (texture == null)
                     {
@@ -156,24 +156,24 @@ namespace ValheimVRM
                 LogTextureFailure(textureInfo, currentTextureIndex);
                 texture = CreateFallbackTexture();
             }
-            
+
             await awaitCaller.NextFrame();
-            
+
             return texture;
         }
-        
+
         private void LogTextureSuccess(UniGLTF.DeserializingTextureInfo textureInfo, int textureIndex)
         {
             var format = GetTextureFormat(textureInfo);
             Debug.Log($"[ValheimVRM] ✅ Loaded texture #{textureIndex} | {textureInfo.ImageData.Length} bytes | {format}");
         }
-        
+
         private void LogTextureFailure(UniGLTF.DeserializingTextureInfo textureInfo, int textureIndex)
         {
             var format = GetTextureFormat(textureInfo);
             Debug.LogWarning($"[ValheimVRM] ❌ Failed to load texture #{textureIndex} | {textureInfo.ImageData.Length} bytes | {format}");
         }
-        
+
         private string GetTextureFormat(UniGLTF.DeserializingTextureInfo textureInfo)
         {
             if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 24)
@@ -182,7 +182,7 @@ namespace ValheimVRM
                 {
                     var bitDepth = textureInfo.ImageData[24];
                     var colorType = textureInfo.ImageData[25];
-                    
+
                     string colorTypeStr;
                     switch (colorType)
                     {
@@ -193,7 +193,7 @@ namespace ValheimVRM
                         case 6: colorTypeStr = "RGBA"; break;
                         default: colorTypeStr = "Unknown"; break;
                     }
-                    
+
                     return $"{bitDepth}-bit | {colorTypeStr}";
                 }
                 catch
@@ -205,10 +205,10 @@ namespace ValheimVRM
             {
                 return "JPEG";
             }
-            
+
             return "Unknown format";
         }
-        
+
         private Texture2D CreateFallbackTexture()
         {
             // Create a simple 1x1 white texture as fallback
@@ -217,13 +217,13 @@ namespace ValheimVRM
             fallbackTexture.Apply();
             return fallbackTexture;
         }
-        
+
     }
-    
-    public sealed class TextureDeserializer: UniGLTF.ITextureDeserializer
+
+    public sealed class TextureDeserializer : UniGLTF.ITextureDeserializer
     {
         private static int textureLoadCounter = 0;
-        
+
         private Texture2D LoadIndexedPngWithUnity(byte[] pngData)
         {
             try
@@ -236,7 +236,7 @@ namespace ValheimVRM
                     var rgbaTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false);
                     rgbaTexture.SetPixels32(texture.GetPixels32());
                     rgbaTexture.Apply();
-                    
+
                     Object.DestroyImmediate(texture);
                     return rgbaTexture;
                 }
@@ -248,7 +248,7 @@ namespace ValheimVRM
             }
             return null;
         }
-        
+
         public async Task<Texture2D> LoadTextureAsync(UniGLTF.DeserializingTextureInfo textureInfo, UniGLTF.IAwaitCaller awaitCaller)
         {
             if (textureInfo?.ImageData == null)
@@ -256,10 +256,10 @@ namespace ValheimVRM
                 Debug.LogError("[ValheimVRM] TextureInfo or ImageData is null");
                 return CreateFallbackTexture();
             }
-            
+
             Texture2D texture = null;
             int currentTextureIndex = ++textureLoadCounter;
-            
+
             // Debug PNG header detection
             if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 25)
             {
@@ -268,8 +268,8 @@ namespace ValheimVRM
             }
 
             // Check if this is an indexed PNG (color type 3)
-            bool isIndexedPng = textureInfo.DataMimeType == "image/png" && 
-                               textureInfo.ImageData.Length >= 25 && 
+            bool isIndexedPng = textureInfo.DataMimeType == "image/png" &&
+                               textureInfo.ImageData.Length >= 25 &&
                                textureInfo.ImageData[25] == 3;
 
             if (isIndexedPng)
@@ -315,7 +315,7 @@ namespace ValheimVRM
             try
             {
                 texture = AsyncImageLoader.CreateFromImage(textureInfo.ImageData, settings);
-                
+
                 if (texture == null)
                 {
                     LogTextureFailure(textureInfo, currentTextureIndex);
@@ -338,24 +338,24 @@ namespace ValheimVRM
                 LogTextureFailure(textureInfo, currentTextureIndex);
                 texture = CreateFallbackTexture();
             }
-            
+
             await awaitCaller.NextFrame();
-            
+
             return texture;
         }
-        
+
         private void LogTextureSuccess(UniGLTF.DeserializingTextureInfo textureInfo, int textureIndex)
         {
             var format = GetTextureFormat(textureInfo);
             Debug.Log($"[ValheimVRM] ✅ Loaded texture #{textureIndex} | {textureInfo.ImageData.Length} bytes | {format}");
         }
-        
+
         private void LogTextureFailure(UniGLTF.DeserializingTextureInfo textureInfo, int textureIndex)
         {
             var format = GetTextureFormat(textureInfo);
             Debug.LogWarning($"[ValheimVRM] ❌ Failed to load texture #{textureIndex} | {textureInfo.ImageData.Length} bytes | {format}");
         }
-        
+
         private string GetTextureFormat(UniGLTF.DeserializingTextureInfo textureInfo)
         {
             if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 24)
@@ -364,7 +364,7 @@ namespace ValheimVRM
                 {
                     var bitDepth = textureInfo.ImageData[24];
                     var colorType = textureInfo.ImageData[25];
-                    
+
                     string colorTypeStr;
                     switch (colorType)
                     {
@@ -375,7 +375,7 @@ namespace ValheimVRM
                         case 6: colorTypeStr = "RGBA"; break;
                         default: colorTypeStr = "Unknown"; break;
                     }
-                    
+
                     return $"{bitDepth}-bit | {colorTypeStr}";
                 }
                 catch
@@ -387,10 +387,10 @@ namespace ValheimVRM
             {
                 return "JPEG";
             }
-            
+
             return "Unknown format";
         }
-        
+
         private Texture2D CreateFallbackTexture()
         {
             // Create a simple 1x1 white texture as fallback
@@ -400,9 +400,8 @@ namespace ValheimVRM
             return fallbackTexture;
         }
     }
-    
+
 }
 
 
 
- 

@@ -15,14 +15,14 @@ using Object = UnityEngine.Object;
 
 namespace ValheimVRM
 {
-    public class VRM 
+	public class VRM
 	{
 		public enum SourceType
 		{
 			Local,  // my VRM from my computer
 			Shared // VRM, downloaded from other player
 		}
-		
+
 		public GameObject VisualModel { get; private set; }
 		public byte[] Src;
 		public byte[] SrcHash;
@@ -68,10 +68,10 @@ namespace ValheimVRM
 				using (var md5 = System.Security.Cryptography.MD5.Create())
 				{
 					byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(Settings.GetSettings(Name).ToStringDiffOnly());
-					
+
 					lock (this)
 					{
-						SettingsHash =  md5.ComputeHash(inputBytes);;
+						SettingsHash = md5.ComputeHash(inputBytes); ;
 					}
 				}
 			});
@@ -100,9 +100,9 @@ namespace ValheimVRM
 			try
 			{
 				var data = new GlbBinaryParser(buf, path).Parse();
- 
+
 				var loaded = default(RuntimeGltfInstance);
- 
+
 				try
 				{
 					var vrm = new VRMData(data);
@@ -115,9 +115,9 @@ namespace ValheimVRM
 					{
 						Debug.LogError("Failed to load type: " + ex.TypeName);
 						Debug.LogError(ex);
-					}				
+					}
 				}
-				catch(NotVrm0Exception)
+				catch (NotVrm0Exception)
 				{
 					Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
 					var vrm = Vrm10Data.Parse(data);
@@ -147,26 +147,26 @@ namespace ValheimVRM
 
 			return null;
 		}
-		
- 
+
+
 
 		public static IEnumerator ImportVisualAsync(byte[] buf, string path, float scale, Action<GameObject> onCompleted)
 		{
 			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
 
-			var dataTask = Task.Run(() => new GlbBinaryParser(buf, path).Parse()); 
+			var dataTask = Task.Run(() => new GlbBinaryParser(buf, path).Parse());
 			while (!dataTask.IsCompleted)
 			{
 				yield return new WaitUntil(() => dataTask.IsCompleted);
 			}
-			
+
 			if (dataTask.IsFaulted)
 			{
 				Debug.LogError($"[ValheimVRM] Failed to parse GLB data: {dataTask.Exception?.Flatten()}");
 				onCompleted(null);
 				yield break;
 			}
-			
+
 			var gltfData = dataTask.Result;
 			if (gltfData == null)
 			{
@@ -175,20 +175,20 @@ namespace ValheimVRM
 				yield break;
 			}
 
- 
+
 			Task<RuntimeGltfInstance> loader = null;
 			bool maybeVrm10 = false;
 
 			Task<VRMData> vrm0Task = Task.Run(() => new VRMData(gltfData));
-			
+
 			while (!vrm0Task.IsCompleted)
 			{
 				yield return new WaitUntil(() => vrm0Task.IsCompleted);
 			}
-			
- 
+
+
 			if (vrm0Task.IsFaulted)
-			{  
+			{
 				if (vrm0Task.Exception.InnerException is NotVrm0Exception)
 				{
 					maybeVrm10 = true;
@@ -200,7 +200,7 @@ namespace ValheimVRM
 				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
 
- 
+
 			if (maybeVrm10)
 			{
 				Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
@@ -209,18 +209,18 @@ namespace ValheimVRM
 				{
 					yield return new WaitUntil(() => vrmTask.IsCompleted);
 				}
-				
+
 				if (vrmTask.IsFaulted)
 				{
 					Debug.LogError($"[ValheimVRM] Failed to parse VRM10 data: {vrmTask.Exception?.Flatten()}");
 					onCompleted(null);
 					yield break;
 				}
-        
+
 				var context = new Vrm10Importer(vrmTask.Result, null, null);
 				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
- 
+
 			if (loader == null)
 			{
 				Debug.LogError("Loader was not initialized.");
@@ -237,7 +237,7 @@ namespace ValheimVRM
 				onCompleted(null);
 				yield break;
 			}
-			
+
 			var loaded = loader.Result;
 			if (loaded == null)
 			{
@@ -245,7 +245,7 @@ namespace ValheimVRM
 				onCompleted(null);
 				yield break;
 			}
-				
+
 			//this is what .LoadMeshes() does
 			// we are just yielding between each mesh.
 			foreach (Renderer visibleRenderer in loaded.VisibleRenderers)
@@ -259,18 +259,18 @@ namespace ValheimVRM
 			onCompleted(loaded.Root);
 		}
 
-		
+
 		public static async Task<GameObject> ImportVisualAsync(byte[] buf, string path, float scale)
 		{
 			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
-			
+
 			GltfData data = new GlbBinaryParser(buf, path).Parse();
 
 			var vrm = new VRMData(data);
-			
+
 			RuntimeGltfInstance loaded;
-			
-			using(VRMImporterContext loader = new VRMImporterContext(vrm, null, new TextureDeserializerAsync()))
+
+			using (VRMImporterContext loader = new VRMImporterContext(vrm, null, new TextureDeserializerAsync()))
 			{
 				loaded = await loader.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
@@ -282,7 +282,7 @@ namespace ValheimVRM
 					Debug.LogError("[ValheimVRM] Loader returned null result");
 					return null;
 				}
-				
+
 				loaded.ShowMeshes();
 				loaded.Root.transform.localScale = Vector3.one * scale;
 				Debug.Log("[ValheimVRM] VRM read successful");
@@ -296,8 +296,8 @@ namespace ValheimVRM
 
 			return null;
 		}
-		
- 
+
+
 		public IEnumerator SetToPlayer(Player player)
 		{
 			if (player == null) yield break;
@@ -315,7 +315,7 @@ namespace ValheimVRM
 			var settings = Settings.GetSettings(Name);
 			if (settings == null) yield break;
 			player.m_maxInteractDistance *= settings.InteractionDistanceScale;
-		 
+
 			if (VisualModel == null) yield break;
 			var vrmModel = Object.Instantiate(VisualModel);
 			if (vrmModel == null) yield break;
@@ -331,7 +331,7 @@ namespace ValheimVRM
 			{
 				Object.Destroy(oldModel.gameObject);
 			}
-			
+
 			vrmModel.transform.SetParent(parent, false);
 
 			float newHeight = settings.PlayerHeight;
@@ -349,7 +349,7 @@ namespace ValheimVRM
 			{
 				rigidBody.centerOfMass = collider.center;
 			}
-			
+
 			yield return null;
 
 			var originalVisual = player.GetVisual();
@@ -426,13 +426,13 @@ namespace ValheimVRM
 				springBone.m_center = null;
 				yield return null;
 			}
-			
+
 			if (player == null) yield break;
 			var controller = player.GetComponent<VrmController>();
 			if (controller != null)
 			{
 				controller.ReloadSpringBones();
 			}
-        }
-    }
+		}
+	}
 }

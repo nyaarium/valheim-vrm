@@ -27,8 +27,8 @@ namespace ValheimVRM
             DateTime currentTime = DateTime.UtcNow;
             TimeSpan timeSinceLastAccess = currentTime - lastAccessTime;
             TimeSpan totalTimeElapsed = currentTime - startTime;
-        
-            lastAccessTime = currentTime; 
+
+            lastAccessTime = currentTime;
 
             string timeSinceLastAccessFormatted = $"{Math.Round(timeSinceLastAccess.TotalMilliseconds, 2)}ms";
             string totalTimeElapsedFormatted = $"{Math.Round(totalTimeElapsed.TotalSeconds, 2)}s";
