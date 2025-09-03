@@ -799,81 +799,44 @@ namespace ValheimVRM
 				{
 					if (!VrmManager.VrmDic.ContainsKey(playerName) || Settings.globalSettings.ReloadInMenu && isInMenu)
 					{
+						string vrmPath = null;
+						bool isShared = false;
+						string vrmName = playerName;
+
+						// Determine which VRM file to load and its properties
 						if (File.Exists(path))
 						{
-
-
-							if (localPlayerName == playerName)
-							{
-								var bytes = File.ReadAllBytes(path);
-								var vrmVisual = VRM.ImportVisual(bytes, path, settings.ModelScale);
-								if (vrmVisual != null)
-								{
-									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName);
-								}
-
-							}
-							else
-							{
-								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, path, settings.ModelScale, settingsUpdated, settings, false));
-							}
-
-
+							vrmPath = path;
+							isShared = false;
 						}
 						else if (File.Exists(sharedPath))
-						{ // isShared true
-
-							if (localPlayerName == playerName) // i do not think sharing is implmented, even if it is, i dont think there can be a local player instance here
-															   // or at least shouldn't be.
-							{
-								var bytes = File.ReadAllBytes(sharedPath);
-								var vrmVisual = VRM.ImportVisual(bytes, sharedPath, settings.ModelScale);
-								if (vrmVisual != null)
-								{
-									vrm = CreateVrm(vrmVisual, __instance, bytes, playerName, true);
-								}
-							}
-							else
-							{
-								CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, playerName, localPlayerName, sharedPath, settings.ModelScale, settingsUpdated, settings, true));
-
-							}
-
+						{
+							vrmPath = sharedPath;
+							isShared = true;
 						}
-						else
-						{ //default character stuff
-							if (!VrmManager.VrmDic.ContainsKey("___Default"))
-							{
-								var defaultPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "___Default.vrm");
-
-								if (File.Exists(defaultPath))
-								{
-
-									if (localPlayerName == playerName)
-									{
-										var bytes = File.ReadAllBytes(defaultPath);
-										var vrmVisual = VRM.ImportVisual(bytes, defaultPath, settings.ModelScale);
-										if (vrmVisual != null)
-										{
-											vrm = CreateVrm(vrmVisual, __instance, bytes, playerName);
-										}
-
-									}
-									else
-									{
-										CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, "___Default", localPlayerName, defaultPath, settings.ModelScale, settingsUpdated, settings, false));
-									}
-
-
-								}
-							}
-							else
-							{
-								vrm = VrmManager.VrmDic["___Default"];
-							}
-
+						else if (!VrmManager.VrmDic.ContainsKey("___Default"))
+						{
+							// Default character fallback
+							vrmPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "___Default.vrm");
+							vrmName = "___Default";
+							isShared = false;
 						}
 
+						// Load VRM if path was found
+						if (vrmPath != null && File.Exists(vrmPath))
+						{
+							if (localPlayerName == playerName)
+							{
+								// Use async import with TextureDeserializerAsync to keep textures readable
+								Debug.Log($"[ValheimVRM] 🖌️ Self-avatar detected, using async import with TextureDeserializerAsync for {vrmName}");
+							}
+							CoroutineHelper.Instance.StartCoroutine(LoadVrm(__instance, vrmName, localPlayerName, vrmPath, settings.ModelScale, settingsUpdated, settings, isShared));
+						}
+						else if (vrmName == "___Default" && VrmManager.VrmDic.ContainsKey("___Default"))
+						{
+							// Use existing default VRM
+							vrm = VrmManager.VrmDic["___Default"];
+						}
 					}
 					else
 					{
