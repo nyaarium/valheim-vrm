@@ -1,8 +1,14 @@
+## Update 1.4.2
+
+This patch fixes a black-screen freeze when you die. (fixes #20)
+
+Bug fixes by PR #19 revealed a pre-exising race condition when the ragdoll is created (in `Patch_Humanoid_OnRagdollCreated.Postfix`). It was a rare freeze before when it was syncronous. But now that it's asycronous, it always happens.
+
 ## Update 1.4.1
 
-- Fixed `AttemptTextureFix` feature that converted VRM shader to in-game shader (fixes #18):
+Fixed `AttemptTextureFix` feature that converted VRM shader to in-game shader (fixes #18):
 
-  - Side note: I will eventually rename this option to be clear what this option even does.
+*Side note:* I will eventually rename this option to be clear what this option even does.
 
 ## Update 1.4.0
 
