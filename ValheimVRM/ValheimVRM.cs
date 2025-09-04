@@ -499,13 +499,25 @@ namespace ValheimVRM
 					smr.updateWhenOffscreen = true;
 				}
 
+				// Check if Animator already exists before adding one
+				var ragAnim = ragdoll.gameObject.GetComponent<Animator>();
+				if (ragAnim == null)
+				{
+					ragAnim = ragdoll.gameObject.AddComponent<Animator>();
+					ragAnim.keepAnimatorStateOnDisable = true;
+					ragAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+				}
 
-				var ragAnim = ragdoll.gameObject.AddComponent<Animator>();
-				ragAnim.keepAnimatorStateOnDisable = true;
-				ragAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-
-				var orgAnim = (player.GetField<Player, Animator>("m_animator"));
-				ragAnim.avatar = orgAnim.avatar;
+				// Add null check for original animator
+				var orgAnim = player.GetField<Player, Animator>("m_animator");
+				if (orgAnim != null && orgAnim.avatar != null)
+				{
+					ragAnim.avatar = orgAnim.avatar;
+				}
+				else
+				{
+					Debug.LogWarning($"[ValheimVRM] ☠️ Original animator or avatar is null for player {player.GetPlayerName()}");
+				}
 
 				if (VrmManager.PlayerToVrmInstance.TryGetValue(player, out var vrm))
 				{
@@ -517,7 +529,15 @@ namespace ValheimVRM
 					var sync = vrm.GetComponent<VRMAnimationSync>();
 					if (sync != null)
 					{
-						sync.Setup(ragAnim, Settings.GetSettings(VrmManager.PlayerToName[player]), true);
+						var settings = Settings.GetSettings(VrmManager.PlayerToName[player]);
+						if (settings != null)
+						{
+							sync.Setup(ragAnim, settings, true);
+						}
+						else
+						{
+							Debug.LogWarning($"[ValheimVRM] ☠️ Settings not found for player {player.GetPlayerName()}");
+						}
 					}
 				}
 			}
