@@ -150,6 +150,8 @@
 		<!-- Copy debug files to local Valheim installation (only if INSTALL_PATH is set) -->
 		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(INSTALL_PATH)' != '' ">
 			<DebugFiles Include="$(TargetPath)" />
+			<DebugFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
+
 			<DebugFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
 			<DebugFiles Include="$(TargetDir)$(TargetFileName).mdb" Condition="Exists('$(TargetDir)$(TargetFileName).mdb')" />
 		</ItemGroup>
@@ -161,6 +163,7 @@
 		<!-- Copy release files to local Valheim installation (only if INSTALL_PATH is set) -->
 		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(INSTALL_PATH)' != '' ">
 			<ReleaseFiles Include="$(TargetPath)" />
+			<ReleaseFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 		</ItemGroup>
 		<Copy Condition=" '$(Configuration)' == 'Release' and '$(INSTALL_PATH)' != '' " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(INSTALL_PATH_PLUGINS)/ValheimVRM" />
 
