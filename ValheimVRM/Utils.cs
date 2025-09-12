@@ -53,5 +53,16 @@ namespace ValheimVRM
 			self.opcode == code;
 		public static bool IsOp(this CodeInstruction self, OpCode code, object operand) =>
 			self.opcode == code && self.operand.Equals(operand);
+
+		/// <summary>
+		/// Sends a notification message to the local player's message HUD
+		/// </summary>
+		public static void SendNotification(string message, MessageHud.MessageType messageType = MessageHud.MessageType.Center)
+		{
+			if (MessageHud.instance != null)
+			{
+				MessageHud.instance.ShowMessage(messageType, message);
+			}
+		}
 	}
 }

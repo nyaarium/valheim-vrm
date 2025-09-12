@@ -66,11 +66,13 @@
 				"files.eol": "\n",
 				"files.insertFinalNewline": true,
 				"files.watcherExclude": {
-					"**/dist/**": true,
-					"**/.next/**": true,
+					"**/.cursor/**": true,
 					"**/node_modules/**": true,
-					"**/node_modules/*/**": false,
-					"**/volumes/**": true
+					"**/volumes/**": true,
+					"**/bin/**": true,
+					"**/obj/**": true,
+					"**/Libs/**": true,
+					"**/release/**": true
 				},
 				"git.branchProtectionPrompt": "alwaysCommit",
 				"javascript.preferences.importModuleSpecifier": "non-relative",

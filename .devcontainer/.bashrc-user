@@ -152,7 +152,9 @@ if [ -z "$(git config --global user.name)" ]; then
     echo ""
 fi
 
+export PAGER=cat
 
+# Git config
 git config --global core.editor "cursor"
 
 # Unconfigure key signing, for when the user has it enabled on the host machine

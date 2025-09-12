@@ -94,11 +94,9 @@ RUN cd /usr/local/bin/ \
 
 
 ############################
-# Valheim DLLs - Update this list as needed:
-#   - assembly_utils.dll
-#   - assembly_guiutils.dll
-#   - assembly_valheim.dll
-#   - UnityEngine.dll
+# Valheim DLLs
+
+ENV VALHEIM_INSTALL_PATH=/var/build-dlls
 
 RUN steamcmd \
 	+force_install_dir /var/valheim \
@@ -111,7 +109,9 @@ RUN steamcmd \
 
 
 ############################
-# BepInEx DLLs - Update the version as needed:
+# BepInEx DLLs
+
+# Update the version as needed: https://github.com/BepInEx/BepInEx/releases/
 ENV BEPINEX_VERSION=5.4.23.3
 
 RUN mkdir -p /var/bepinex \

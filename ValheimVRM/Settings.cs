@@ -361,13 +361,13 @@ namespace ValheimVRM
                             }
                             break;
                         case nameof(ForceWindDisabled):
-                            foreach (var controller in Object.FindObjectsOfType<VrmController>())
+                            foreach (var controller in Object.FindObjectsByType<VrmController>(FindObjectsSortMode.None))
                             {
                                 controller.ResetSpringBonesWind();
                             }
                             break;
                         case nameof(AllowIndividualWinds):
-                            foreach (var controller in Object.FindObjectsOfType<VrmController>())
+                            foreach (var controller in Object.FindObjectsByType<VrmController>(FindObjectsSortMode.None))
                             {
                                 controller.ReloadSpringBones();
                             }

@@ -13,6 +13,7 @@ namespace ValheimVRM
     {
         private static int textureLoadCounter = 0;
 
+        /*
         private Texture2D LoadIndexedPngWithUnity(byte[] pngData)
         {
             try
@@ -37,6 +38,7 @@ namespace ValheimVRM
             }
             return null;
         }
+        */
 
         public async Task<Texture2D> LoadTextureAsync(UniGLTF.DeserializingTextureInfo textureInfo, UniGLTF.IAwaitCaller awaitCaller)
         {
@@ -49,6 +51,7 @@ namespace ValheimVRM
             Texture2D texture = null;
             int currentTextureIndex = ++textureLoadCounter;
 
+            /*
             // Debug PNG header detection
             if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 25)
             {
@@ -75,6 +78,7 @@ namespace ValheimVRM
                     return texture;
                 }
             }
+            */
 
             // Use AsyncImageLoader for non-indexed textures
             var settings = new AsyncImageLoader.LoaderSettings();
@@ -120,6 +124,7 @@ namespace ValheimVRM
                         // Fallback failed, continue
                     }
 
+                    /*
                     // If still null and PNG, try Unity's decoder (handles indexed PNGs)
                     if (texture == null && textureInfo.DataMimeType == "image/png")
                     {
@@ -131,6 +136,7 @@ namespace ValheimVRM
                             LogTextureSuccess(textureInfo, currentTextureIndex);
                         }
                     }
+                    */
 
                     // If still null, create a fallback texture
                     if (texture == null)
@@ -224,6 +230,7 @@ namespace ValheimVRM
     {
         private static int textureLoadCounter = 0;
 
+        /*
         private Texture2D LoadIndexedPngWithUnity(byte[] pngData)
         {
             try
@@ -248,6 +255,7 @@ namespace ValheimVRM
             }
             return null;
         }
+        */
 
         public async Task<Texture2D> LoadTextureAsync(UniGLTF.DeserializingTextureInfo textureInfo, UniGLTF.IAwaitCaller awaitCaller)
         {
@@ -260,6 +268,7 @@ namespace ValheimVRM
             Texture2D texture = null;
             int currentTextureIndex = ++textureLoadCounter;
 
+            /*
             // Debug PNG header detection
             if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 25)
             {
@@ -286,6 +295,7 @@ namespace ValheimVRM
                     return texture;
                 }
             }
+            */
 
             // Use AsyncImageLoader for non-indexed textures
             var settings = new AsyncImageLoader.LoaderSettings();
