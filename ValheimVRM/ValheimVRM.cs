@@ -195,6 +195,8 @@ namespace ValheimVRM
 
 			Debug.Log($"[ValheimVRM] 🖌️ Processing {materials.Count} materials for \"{vrm.Name}\" VRM  |  UseMToonShader {settings.UseMToonShader}  |  AttemptTextureFix {settings.AttemptTextureFix}");
 
+			Utils.SendNotification($"ValheimVRM - {vrm.Name} - Processing {materials.Count} materials...", MessageHud.MessageType.TopLeft);
+
 			foreach (var mat in materials)
 			{
 				var materialStartTime = System.Diagnostics.Stopwatch.StartNew();
@@ -281,6 +283,8 @@ namespace ValheimVRM
 						materialStartTime.Stop();
 						Debug.Log($"[ValheimVRM] 🖌️ Converted \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
 
+						Utils.SendNotification($"ValheimVRM - \"{vrm.Name}\" - Converted {mat.name} in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
+
 						foreach (var textureInfo in processedTextures)
 						{
 							Debug.Log($"[ValheimVRM]     {textureInfo}");
@@ -293,6 +297,8 @@ namespace ValheimVRM
 
 			totalStartTime.Stop();
 			Debug.Log($"[ValheimVRM] 🖌️ Finished processing {materials.Count} materials for VRM '{vrm.Name}' in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+
+			Utils.SendNotification($"ValheimVRM - {vrm.Name} - All materials processed in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
 		}
 	}
 
