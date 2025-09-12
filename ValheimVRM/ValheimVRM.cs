@@ -190,26 +190,16 @@ namespace ValheimVRM
 
 		public static IEnumerator ProcessMaterialsCoroutine(VRM vrm, List<Material> materials, Settings.VrmSettingsContainer settings)
 		{
-
+			var totalStartTime = System.Diagnostics.Stopwatch.StartNew();
 			Shader foundShader = Shader.Find("Custom/Player");
 
-			Debug.Log($"[ValheimVRM] 🖌️ ProcessMaterialsCoroutine: Processing {materials.Count} materials for VRM '{vrm.Name}'");
-			Debug.Log($"[ValheimVRM] 🖌️ Settings: UseMToonShader={settings.UseMToonShader}, AttemptTextureFix={settings.AttemptTextureFix}, ModelBrightness={settings.ModelBrightness}");
-
-
-			// if (foundShader != null)
-			// {
-			//  var count = foundShader.GetPropertyCount();
-			//  for (int i = 0; i < count; i++)
-			//  {
-			//   Debug.Log($"Shader Name: {foundShader.name} Prop: {i} -> {foundShader.GetPropertyName(i)}");
-			//
-			//  }
-			// }
+			Debug.Log($"[ValheimVRM] 🖌️ Processing {materials.Count} materials for \"{vrm.Name}\" VRM  |  UseMToonShader {settings.UseMToonShader}  |  AttemptTextureFix {settings.AttemptTextureFix}");
 
 			foreach (var mat in materials)
 			{
-				Debug.Log($"[ValheimVRM] 🖌️ Processing material: {mat.name}, shader: {mat.shader?.name ?? "NULL"}");
+				var materialStartTime = System.Diagnostics.Stopwatch.StartNew();
+				var originalShaderName = mat.shader?.name ?? "NULL";
+				var processedTextures = new List<string>();
 
 				if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
 				{
@@ -218,47 +208,33 @@ namespace ValheimVRM
 					color.g *= settings.ModelBrightness;
 					color.b *= settings.ModelBrightness;
 					mat.SetColor("_Color", color);
+
+					materialStartTime.Stop();
+					Debug.Log($"[ValheimVRM] 🖌️ Loaded \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
 				}
 				else if (settings.AttemptTextureFix)
 				{
-					Debug.Log($"[ValheimVRM] 🖌️ AttemptTextureFix path for material {mat.name}");
-
 					if (mat.shader != foundShader)
 					{
-						Debug.Log($"[ValheimVRM] 🖌️ Converting material {mat.name} from {mat.shader?.name ?? "NULL"} to {foundShader?.name ?? "NULL"}");
-
 						var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
-						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} color: {color}");
-
 						var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} mainTex: {(mainTex != null ? $"{mainTex.name} ({mainTex.width}x{mainTex.height})" : "NULL")}");
-
-						Texture2D tex = mainTex; // Declare tex variable here
+						Texture2D tex = mainTex;
 
 						if (mainTex != null)
 						{
-							Debug.Log($"[ValheimVRM] 🖌️ MainTex properties: readable={mainTex.isReadable}, format={mainTex.format}, mipmapCount={mainTex.mipmapCount}");
+							processedTextures.Add($"\"{mainTex.name}\"  |  {mainTex.width}x{mainTex.height}  |  {mainTex.format}");
 
-							// Check if texture is readable before attempting GetPixels
 							if (!mainTex.isReadable)
 							{
 								Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: Texture '{mainTex.name}' is NOT readable! Cannot call GetPixels(). Skipping texture processing for material {mat.name}");
-								// Skip texture processing but continue with shader change
 							}
 							else
 							{
-								Debug.Log($"[ValheimVRM] 🖌️ Texture '{mainTex.name}' is readable, proceeding with GetPixels()");
-
 								tex = new Texture2D(mainTex.width, mainTex.height);
 
-								bool textureProcessed = false;
-								string errorMessage = "";
-
-								// Check if we can process the texture
 								if (mainTex.isReadable)
 								{
 									var pixels = mainTex.GetPixels();
-									Debug.Log($"[ValheimVRM] 🖌️ Successfully got {pixels.Length} pixels from texture '{mainTex.name}'");
 
 									var pixelsTask = Task.Run(() =>
 									{
@@ -281,28 +257,17 @@ namespace ValheimVRM
 
 									tex.SetPixels(pixels);
 									tex.Apply();
-									textureProcessed = true;
-									Debug.Log($"[ValheimVRM] 🖌️ Successfully processed texture for material {mat.name}");
-								}
-								else
-								{
-									errorMessage = $"Texture '{mainTex.name}' is not readable (format: {mainTex.format})";
-									Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: {errorMessage}. Skipping texture processing for material {mat.name}");
-								}
-
-								if (!textureProcessed)
-								{
-									Debug.LogWarning($"[ValheimVRM] 🖌️ Using original texture for material {mat.name} due to: {errorMessage}");
 								}
 							}
 						}
 
-						var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") : null;
-						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} bumpMap: {(bumpMap != null ? bumpMap.name : "NULL")}");
+						var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") as Texture2D : null;
+						if (bumpMap != null)
+						{
+							processedTextures.Add($"\"{bumpMap.name}\"  |  {bumpMap.width}x{bumpMap.height}  |  {bumpMap.format}");
+						}
 
 						mat.shader = foundShader;
-						Debug.Log($"[ValheimVRM] 🖌️ Changed material {mat.name} shader to {foundShader?.name ?? "NULL"}");
-
 						mat.SetTexture("_MainTex", tex);
 						mat.SetTexture("_SkinBumpMap", bumpMap);
 						mat.SetColor("_SkinColor", color);
@@ -313,21 +278,21 @@ namespace ValheimVRM
 						mat.SetFloat("_Glossiness", 0.2f);
 						mat.SetFloat("_MetalGlossiness", 0.0f);
 
-						Debug.Log($"[ValheimVRM] 🖌️ Applied all properties to material {mat.name}");
+						materialStartTime.Stop();
+						Debug.Log($"[ValheimVRM] 🖌️ Converted \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+
+						foreach (var textureInfo in processedTextures)
+						{
+							Debug.Log($"[ValheimVRM]     {textureInfo}");
+						}
 					}
-					else
-					{
-						Debug.Log($"[ValheimVRM] 🖌️ Material {mat.name} already has target shader, skipping conversion");
-					}
-				}
-				else
-				{
-					Debug.Log($"[ValheimVRM] 🖌️ No processing path for material {mat.name}: UseMToonShader={settings.UseMToonShader}, AttemptTextureFix={settings.AttemptTextureFix}");
 				}
 
 				yield return null;
 			}
-			Debug.Log("[ValheimVRM] Material processing completed.");
+
+			totalStartTime.Stop();
+			Debug.Log($"[ValheimVRM] 🖌️ Finished processing {materials.Count} materials for VRM '{vrm.Name}' in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
 		}
 	}
 
