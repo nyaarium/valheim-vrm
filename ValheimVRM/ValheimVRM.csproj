@@ -53,7 +53,9 @@
 		<Reference Include="UnityEngine.AssetBundleModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.AssetBundleModule.dll" />
 		<Reference Include="UnityEngine.CoreModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.CoreModule.dll" />
 		<Reference Include="UnityEngine.PhysicsModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.PhysicsModule.dll" />
+		<!--
 		<Reference Include="UnityEngine.ImageConversionModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.ImageConversionModule.dll" />
+		-->
 		<Reference Include="UnityEngine.UI" HintPath="$(VALHEIM_MANAGED)/UnityEngine.UI.dll" />
 
 		<!-- VRM -->
