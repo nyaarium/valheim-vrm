@@ -2,8 +2,8 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>1.4.2</Version>
-		<TargetFramework>net471</TargetFramework>
+		<Version>1.5.0</Version>
+		<TargetFramework>net48</TargetFramework>
 	</PropertyGroup>
 
 	<!-- Project configuration and paths -->

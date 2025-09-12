@@ -102,7 +102,7 @@ namespace ValheimVRM
 
 		public static VrmController GetLocalController()
 		{
-			foreach (var controller in FindObjectsOfType<VrmController>())
+			foreach (var controller in FindObjectsByType<VrmController>(FindObjectsSortMode.None))
 			{
 				if (controller.view.GetZDO() != null && controller.view.IsOwner() || controller.view.GetZDO() == null)
 				{
