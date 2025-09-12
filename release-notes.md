@@ -1,3 +1,13 @@
+## Update 1.5.0
+
+**BepInEx:** 5.4.23.3
+
+**Valheim:** 0.221.4 (n-35)
+
+This big update matches the .NET version to what Valheim uses, 4.8.
+
+When loading VRMs, progress will now be displayed in the top-left message HUD, telling you the amount of time taken to load the VRM.
+
 ## Update 1.4.2
 
 This patch fixes a black-screen freeze when you die. (fixes #20)
