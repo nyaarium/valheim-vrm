@@ -8,14 +8,10 @@
 
 	<!-- Validate required environment variables -->
 	<Target Name="ValidateEnvironment" BeforeTargets="PrepareForBuild">
-		<Error Condition="'$(VALHEIM_INSTALL_PATH)' == ''"
-			Text="VALHEIM_INSTALL_PATH environment variable is not set. Please set it to your Valheim installation directory (ex: C:\Steam\steamapps\common\Valheim)" />
-		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)')"
-			Text="VALHEIM_INSTALL_PATH directory does not exist: $(VALHEIM_INSTALL_PATH)" />
-		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed')"
-			Text="Valheim Managed DLLs not found at: $(VALHEIM_INSTALL_PATH)/valheim_Data/Managed" />
-		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)/BepInEx/core')"
-			Text="BepInEx core DLLs not found at: $(VALHEIM_INSTALL_PATH)/BepInEx/core" />
+		<Error Condition="'$(VALHEIM_INSTALL_PATH)' == ''" Text="VALHEIM_INSTALL_PATH environment variable is not set. Please set it to your Valheim installation directory (ex: C:\Steam\steamapps\common\Valheim)" />
+		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)')" Text="VALHEIM_INSTALL_PATH directory does not exist: $(VALHEIM_INSTALL_PATH)" />
+		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed')" Text="Valheim Managed DLLs not found at: $(VALHEIM_INSTALL_PATH)/valheim_Data/Managed" />
+		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)/BepInEx/core')" Text="BepInEx core DLLs not found at: $(VALHEIM_INSTALL_PATH)/BepInEx/core" />
 	</Target>
 
 	<!-- Project configuration and paths -->
@@ -87,6 +83,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="CloudinaryDotNet" Version="1.18.1" />
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -213,12 +212,10 @@
 		<!-- Zip for release -->
 
 		<!-- Windows: use PowerShell Compress-Archive -->
-		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' "
-			Command="powershell -NoProfile -NonInteractive -Command &quot;Compress-Archive -Path '$(RELEASE_STAGING)*' -DestinationPath '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' -Force&quot;" />
+		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' " Command="powershell -NoProfile -NonInteractive -Command &quot;Compress-Archive -Path '$(RELEASE_STAGING)*' -DestinationPath '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' -Force&quot;" />
 
 		<!-- Linux: use zip -->
-		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' != 'Windows_NT' "
-			Command="cd '$(RELEASE_STAGING)' &amp;&amp; zip -r -9 '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' ." />
+		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' != 'Windows_NT' " Command="cd '$(RELEASE_STAGING)' &amp;&amp; zip -r -9 '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' ." />
 
 		<!-- Cleanup after archiving -->
 		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(RELEASE_STAGING)" />
