@@ -96,6 +96,8 @@ RUN cd /usr/local/bin/ \
 ############################
 # Valheim DLLs
 
+ENV VALHEIM_INSTALL_PATH=/var/build-dlls
+
 RUN steamcmd \
 	+force_install_dir /var/valheim \
 	+login anonymous \
