@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ValheimVRM
 {
@@ -63,6 +65,44 @@ namespace ValheimVRM
 			{
 				MessageHud.instance.ShowMessage(messageType, message);
 			}
+		}
+
+		/// <summary>
+		/// Tries to load image data into a Unity Texture2D using reflection for weird textures that crash AsyncImageLoader
+		/// </summary>
+		public static Texture2D TryLoadImageWithUnity(byte[] imageData, bool linear)
+		{
+			try
+			{
+				var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false, linear);
+				var imageConversionType = System.Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule")
+					?? System.Type.GetType("UnityEngine.ImageConversion, UnityEngine");
+				if (imageConversionType == null)
+				{
+					Object.DestroyImmediate(texture);
+					return null;
+				}
+				var loadImage = imageConversionType.GetMethod(
+					"LoadImage",
+					new System.Type[] { typeof(Texture2D), typeof(byte[]), typeof(bool) }
+				);
+				if (loadImage == null)
+				{
+					Object.DestroyImmediate(texture);
+					return null;
+				}
+				var ok = (bool)loadImage.Invoke(null, new object[] { texture, imageData, false });
+				if (ok)
+				{
+					return texture;
+				}
+				Object.DestroyImmediate(texture);
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogWarning($"[ValheimVRM] Unity reflection image load failed: {ex.Message}");
+			}
+			return null;
 		}
 	}
 }
