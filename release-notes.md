@@ -1,12 +1,22 @@
+## Update 1.5.1
+
+**BepInEx:** 5.4.23.3
+
+**Valheim:** 0.221.4 (n-35)
+
+Fixed the custom texture loader to handle unusual textures *(like indexed color)*.
+
 ## Update 1.5.0
 
 **BepInEx:** 5.4.23.3
 
 **Valheim:** 0.221.4 (n-35)
 
-This big update matches the .NET version to what Valheim uses, 4.8.
-
 When loading VRMs, progress will now be displayed in the top-left message HUD, telling you the amount of time taken to load the VRM.
+
+Disabled the custom texture loader for indexed color textures. It broke with the latest Valheim update. *(re-enabled in 1.5.1)*
+
+~~Match the .NET version to what Valheim uses, 4.8 (i think?).~~ *(nvm, the build error was something else. Reverting this in 1.5.1)*
 
 ## Update 1.4.2
 

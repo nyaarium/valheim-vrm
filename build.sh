@@ -9,7 +9,7 @@ ROOT="$(pwd)"
 VALHEIM_INSTALL_PATH=/var/build-dlls
 UNIVRM_UNITY_LIBS="$ROOT/Libs"
 PROJECT_DIR="$ROOT/ValheimVRM"
-OUT_DLL="$PROJECT_DIR/bin/Release/net48/ValheimVRM.dll"
+OUT_DLL="$PROJECT_DIR/bin/Release/net471/ValheimVRM.dll"
 
 cd "$PROJECT_DIR"
 
