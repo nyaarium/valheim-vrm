@@ -6,7 +6,7 @@ echo Building ValheimVRM...
 set "ROOT=%~dp0"
 set "UNIVRM_UNITY_LIBS=%ROOT%Libs"
 set "PROJECT_DIR=%ROOT%ValheimVRM"
-set "OUT_DLL=%PROJECT_DIR%\bin\Release\net48\ValheimVRM.dll"
+set "OUT_DLL=%PROJECT_DIR%\bin\Release\net471\ValheimVRM.dll"
 
 :: Go to project directory
 cd /d "%PROJECT_DIR%"

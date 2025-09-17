@@ -2,8 +2,8 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>1.5.0</Version>
-		<TargetFramework>net48</TargetFramework>
+		<Version>1.5.1</Version>
+		<TargetFramework>net471</TargetFramework>
 	</PropertyGroup>
 
 	<!-- Validate required environment variables -->
