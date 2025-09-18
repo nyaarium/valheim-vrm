@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Diagnostics;
@@ -196,7 +198,7 @@ namespace ValheimVRM
 			}
 			else
 			{
-				var context = new VRMImporterContext(vrm0Task.Result, null, new TextureDeserializerAsync());
+				var context = new VRMImporterContext(vrm0Task.Result, null, new TextureDeserializer());
 				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}
 
@@ -270,7 +272,7 @@ namespace ValheimVRM
 
 			RuntimeGltfInstance loaded;
 
-			using (VRMImporterContext loader = new VRMImporterContext(vrm, null, new TextureDeserializerAsync()))
+			using (VRMImporterContext loader = new VRMImporterContext(vrm, null, new TextureDeserializer()))
 			{
 				loaded = await loader.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
 			}

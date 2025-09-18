@@ -106,43 +106,6 @@ namespace ValheimVRM
 		}
 
 		/// <summary>
-		/// Starts an async task to apply color and brightness to texture
-		/// </summary>
-		public static Task<Color[]> ApplyColorAndBrightnessAsync(Color[] pixels, Color color, float brightness)
-		{
-			return Task.Run(() =>
-			{
-				for (int i = 0; i < pixels.Length; i++)
-				{
-					var col = pixels[i] * color;
-					Color.RGBToHSV(col, out float h, out float s, out float v);
-					v *= brightness;
-					pixels[i] = Color.HSVToRGB(h, s, v, true);
-					pixels[i].a = col.a;
-				}
-				return pixels;
-			});
-		}
-
-		/// <summary>
-		/// Creates a new texture from processed pixels if task completed, otherwise returns original texture
-		/// </summary>
-		public static Texture2D CreateTextureFromTask(Task<Color[]> task, Texture2D originalTex, int width, int height)
-		{
-			Texture2D tex = originalTex;
-			if (task != null && originalTex != null)
-			{
-				var pixels = task.Result;
-				var newTex = new Texture2D(width, height);
-				newTex.SetPixels(pixels);
-				newTex.Apply();
-				tex = newTex;
-			}
-			return tex;
-		}
-
-
-		/// <summary>
 		/// Applies all material properties for Valheim player shader
 		/// </summary>
 		public static void ApplyMaterialProperties(Material mat, Shader shader, Texture2D tex, Texture2D bumpMap, Color color)
