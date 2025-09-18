@@ -101,6 +101,18 @@ namespace ValheimVRM
 		public static Dictionary<Player, string> PlayerToName = new Dictionary<Player, string>();
 		public static Dictionary<string, VRM> VrmDic = new Dictionary<string, VRM>();
 
+		private class TextureJob
+		{
+			public Material Mat;
+			public Color Color;
+			public Texture2D MainTex;
+			public Texture2D BumpMap;
+			public int Width;
+			public int Height;
+			public Task<Color[]> Task;
+			public List<string> ProcessedInfos;
+		}
+
 		public static VRM RegisterVrm(VRM vrm, LODGroup sampleLODGroup, Player player)
 		{
 			if (vrm.VisualModel == null) return null;
@@ -195,113 +207,133 @@ namespace ValheimVRM
 
 			Debug.Log($"[ValheimVRM] 🖌️ Processing {materials.Count} materials for \"{vrm.Name}\" VRM  |  UseMToonShader {settings.UseMToonShader}  |  AttemptTextureFix {settings.AttemptTextureFix}");
 
-			Utils.SendNotification($"ValheimVRM - {vrm.Name} - Processing {materials.Count} materials...", MessageHud.MessageType.TopLeft);
+			var jobs = new List<TextureJob>();
+			int textureCount = 0;
 
 			foreach (var mat in materials)
 			{
-				var materialStartTime = System.Diagnostics.Stopwatch.StartNew();
-				var originalShaderName = mat.shader?.name ?? "NULL";
-				var processedTextures = new List<string>();
-
-				if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
+				if (settings.AttemptTextureFix)
 				{
-					var color = mat.GetColor("_Color");
-					color.r *= settings.ModelBrightness;
-					color.g *= settings.ModelBrightness;
-					color.b *= settings.ModelBrightness;
-					mat.SetColor("_Color", color);
-
-					materialStartTime.Stop();
-					Debug.Log($"[ValheimVRM] 🖌️ Loaded \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
-				}
-				else if (settings.AttemptTextureFix)
-				{
-					if (mat.shader != foundShader)
+					if (mat.shader == foundShader)
 					{
-						var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
-						var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-						Texture2D tex = mainTex;
-
-						if (mainTex != null)
-						{
-							processedTextures.Add($"\"{mainTex.name}\"  |  {mainTex.width}x{mainTex.height}  |  {mainTex.format}");
-
-							if (!mainTex.isReadable)
-							{
-								Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: Texture '{mainTex.name}' is NOT readable! Cannot call GetPixels(). Skipping texture processing for material {mat.name}");
-							}
-							else
-							{
-								tex = new Texture2D(mainTex.width, mainTex.height);
-
-								if (mainTex.isReadable)
-								{
-									var pixels = mainTex.GetPixels();
-
-									var pixelsTask = Task.Run(() =>
-									{
-										for (int i = 0; i < pixels.Length; i++)
-										{
-											var col = pixels[i] * color;
-											Color.RGBToHSV(col, out float h, out float s, out float v);
-											v *= settings.ModelBrightness;
-											pixels[i] = Color.HSVToRGB(h, s, v, true);
-											pixels[i].a = col.a;
-										}
-									});
-
-									while (!pixelsTask.IsCompleted)
-									{
-										yield return new WaitUntil(() => pixelsTask.IsCompleted);
-									}
-
-									pixelsTask.Wait();
-
-									tex.SetPixels(pixels);
-									tex.Apply();
-								}
-							}
-						}
-
-						var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") as Texture2D : null;
-						if (bumpMap != null)
-						{
-							processedTextures.Add($"\"{bumpMap.name}\"  |  {bumpMap.width}x{bumpMap.height}  |  {bumpMap.format}");
-						}
-
-						mat.shader = foundShader;
-						mat.SetTexture("_MainTex", tex);
-						mat.SetTexture("_SkinBumpMap", bumpMap);
-						mat.SetColor("_SkinColor", color);
-						mat.SetTexture("_ChestTex", tex);
-						mat.SetTexture("_ChestBumpMap", bumpMap);
-						mat.SetTexture("_LegsTex", tex);
-						mat.SetTexture("_LegsBumpMap", bumpMap);
-						mat.SetFloat("_Glossiness", 0.2f);
-						mat.SetFloat("_MetalGlossiness", 0.0f);
-
+						continue;
+					}
+				}
+				else
+				{
+					// Only check MToon if AttemptTextureFix is off
+					if (settings.UseMToonShader && mat.HasProperty("_Color"))
+					{
+						var materialStartTime = System.Diagnostics.Stopwatch.StartNew();
+						var color = mat.GetColor("_Color");
+						color.r *= settings.ModelBrightness;
+						color.g *= settings.ModelBrightness;
+						color.b *= settings.ModelBrightness;
+						mat.SetColor("_Color", color);
 						materialStartTime.Stop();
-						Debug.Log($"[ValheimVRM] 🖌️ Converted \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+						Debug.Log($"[ValheimVRM] 🖌️ Loaded \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+						continue;
+					}
+					continue; // Skip texture processing if AttemptTextureFix is off
+				}
 
-						Utils.SendNotification($"ValheimVRM - \"{vrm.Name}\" - Converted {mat.name} in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
+				var colorFix = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+				var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
+				var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") as Texture2D : null;
 
-						foreach (var textureInfo in processedTextures)
-						{
-							Debug.Log($"[ValheimVRM]     {textureInfo}");
-						}
+				Task<Color[]> task = null;
+				int w = 0, h = 0;
+				var processedInfos = new List<string>();
+
+				if (mainTex != null)
+				{
+					processedInfos.Add($"\"{mainTex.name}\"  |  {mainTex.width}x{mainTex.height}  |  {mainTex.format}");
+					textureCount++; // Count color texture
+					if (!mainTex.isReadable)
+					{
+						Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: Texture '{mainTex.name}' is NOT readable! Cannot call GetPixels(). Skipping texture processing for material {mat.name}");
+					}
+					else
+					{
+						var pixels = mainTex.GetPixels(); // extract on main thread
+						w = mainTex.width;
+						h = mainTex.height;
+						task = Utils.ApplyColorAndBrightnessAsync(pixels, colorFix, settings.ModelBrightness);
 					}
 				}
 
+				if (bumpMap != null)
+				{
+					processedInfos.Add($"\"{bumpMap.name}\"  |  {bumpMap.width}x{bumpMap.height}  |  {bumpMap.format}");
+					textureCount++; // Count normal texture
+				}
+
+				jobs.Add(new TextureJob
+				{
+					Mat = mat,
+					Color = colorFix,
+					MainTex = mainTex,
+					BumpMap = bumpMap,
+					Width = w,
+					Height = h,
+					Task = task,
+					ProcessedInfos = processedInfos
+				});
+			}
+
+			// Send start notification after scheduling tasks
+			if (settings.AttemptTextureFix)
+			{
+				Utils.SendNotification($"ValheimVRM - {vrm.Name} - Applying {textureCount} textures... This may lag.", MessageHud.MessageType.Center);
+			}
+
+			var scheduled = new List<Task>();
+			foreach (var j in jobs)
+			{
+				if (j.Task != null) scheduled.Add(j.Task);
+			}
+
+			var allTask = Task.WhenAll(scheduled);
+			while (!allTask.IsCompleted)
+			{
 				yield return null;
 			}
 
-			totalStartTime.Stop();
-			Debug.Log($"[ValheimVRM] 🖌️ Finished processing {materials.Count} materials for VRM '{vrm.Name}' in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+			// Benchmark: Time from task completion to texture application
+			var applyStartTime = System.Diagnostics.Stopwatch.StartNew();
 
-			Utils.SendNotification($"ValheimVRM - {vrm.Name} - All materials processed in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
+			// Apply all textures
+			foreach (var job in jobs)
+			{
+				var materialStartTime = System.Diagnostics.Stopwatch.StartNew();
+				Texture2D tex = Utils.CreateTextureFromTask(job.Task, job.MainTex, job.Width, job.Height);
+
+				Utils.ApplyMaterialProperties(job.Mat, foundShader, tex, job.BumpMap, job.Color);
+				materialStartTime.Stop();
+				Debug.Log($"[ValheimVRM] 🖌️ Converted \"{job.Mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+
+				foreach (var textureInfo in job.ProcessedInfos)
+				{
+					Debug.Log($"[ValheimVRM]     {textureInfo}");
+				}
+
+				yield return null; // Yield after each .apply() to spread lag
+			}
+
+			applyStartTime.Stop();
+			var applyTimeSeconds = applyStartTime.ElapsedMilliseconds / 1000.0;
+			Debug.Log($"[ValheimVRM] 🖌️ Texture application phase completed in {applyTimeSeconds:F2} seconds");
+
+			totalStartTime.Stop();
+			var totalTimeSeconds = totalStartTime.ElapsedMilliseconds / 1000.0;
+			Debug.Log($"[ValheimVRM] 🖌️ Finished processing {materials.Count} materials for VRM '{vrm.Name}' in {totalTimeSeconds:F2} seconds");
+
+			if (settings.AttemptTextureFix)
+			{
+				Utils.SendNotification($"ValheimVRM - {vrm.Name} - Converted {textureCount} textures in {totalTimeSeconds:F2} seconds", MessageHud.MessageType.TopLeft);
+			}
 		}
 	}
-
 
 	[HarmonyPatch(typeof(VisEquipment), "UpdateLodgroup")]
 	static class Patch_VisEquipment_UpdateLodgroup
