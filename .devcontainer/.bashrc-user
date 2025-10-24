@@ -168,4 +168,7 @@ git config --global --add safe.directory /workspace
 
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/scripts:$PATH"
-export PATH="/workspace/.cursor/scripts:$PATH"
+
+if [ -f "$HOME/scripts/.env" ]; then
+    source "$HOME/scripts/.env"
+fi
