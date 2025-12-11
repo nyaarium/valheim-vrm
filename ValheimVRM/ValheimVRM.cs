@@ -66,7 +66,7 @@ namespace ValheimVRM
 		public static void Initialize()
 		{
 			if (_initialized) return;
-			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVrm.shaders");
+			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVRM.shaders");
 
 			if (File.Exists(bundlePath))
 			{
@@ -85,6 +85,10 @@ namespace ValheimVRM
 					}
 					assetBundle.Unload(false);
 				}
+			}
+			else
+			{
+				Debug.LogWarning("[ValheimVRM] Shader AssetBundle not found at: " + bundlePath);
 			}
 			_initialized = true;
 		}

@@ -4,17 +4,21 @@
 
 **Valheim:** 0.221.4 (n-35)
 
-### 🎉 *Everyone should try out `UseMToonShader=false`*
+### Fixes
 
-Rewrote the entire texture loading system to skip multiple buffer copies and cache reused textures. You may see load improvements by x100 or more. (fixes #26)
+- Fixed a name casing mismatch for Linux, where the code was trying to load `UniVRM.shaders` with the name `UniVrm.shaders`. *(should fix #28, but didn't confirm)*
 
-The results are so impressive that I'm making it final. `AttemptTextureFix` is no longer a weird *"attempt"*. It's a finished feature:
+### 🎉 New Parallel Texture Loading System
 
-- `AttemptTextureFix` flag has been **removed**
-- `UseMToonShader=false` is the new setting to use the in-game Valheim shader
-- `UseMToonShader=true` for traditional unlit VRM MToon shader
+Rewrote the entire texture loading system to skip multiple buffer copies and cache reused textures. When using in-game Valheim shader, you may see load improvements by **x100 or more**. (fixes #26)
 
-In my avatar tests with `UseMToonShader=false`:
+The results are so impressive that I'm making it final. `AttemptTextureFix` is no longer a weird *"attempt"*. It's a finished feature, so heres the options to pay attention to:
+
+- ~~`AttemptTextureFix`~~ flag has been **removed**
+- `UseMToonShader=false` is the new setting to use the in-game Valheim shader (try it!)
+- `UseMToonShader=true` for traditional VRM MToon unlit shader
+
+In *my avatar's* tests with `UseMToonShader=false`:
 
 - Version 1.5.1 material load time: **71.84 seconds**
 - Version 1.6.0 material load time: **0.02 seconds**
