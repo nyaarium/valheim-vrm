@@ -9,6 +9,7 @@ using System.Collections;
 using UnityEngine;
 using VRM;
 using Object = UnityEngine.Object;
+using System.Security.Cryptography;
 
 namespace ValheimVRM
 {
@@ -17,7 +18,6 @@ namespace ValheimVRM
 	static class ShaderPatch
 	{
 		private static readonly Dictionary<string, Shader> ShaderDictionary = new Dictionary<string, Shader>();
-
 
 		// im not sure but there might be a bug in Shader.Find?
 		// its returning null anytime the Standard Shader is searched for.
@@ -37,26 +37,21 @@ namespace ValheimVRM
 			Debug.Log("[ValheimVRM ShaderPatch] All shaders loaded into ShaderDictionary.");
 		}
 
-
 		static bool Prefix(ref Shader __result, string name)
 		{
 			Shader shader;
 			if (ShaderDictionary.TryGetValue(name, out shader))
 			{
 
-				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in preloaded ShaderDictionary.");
 				__result = shader;
 				return false;
 			}
-
 
 			if (VRMShaders.Shaders.TryGetValue(name, out shader))
 			{
-				Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' found in VRMShaders.Shaders");
 				__result = shader;
 				return false;
 			}
-
 
 			Debug.Log("[ValheimVRM ShaderPatch] Shader '" + name + "' NOT FOUND in ShaderDictionary. passing method to original Shader.Find.");
 			return true;
@@ -71,7 +66,7 @@ namespace ValheimVRM
 		public static void Initialize()
 		{
 			if (_initialized) return;
-			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVrm.shaders");
+			var bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"UniVRM.shaders");
 
 			if (File.Exists(bundlePath))
 			{
@@ -91,6 +86,10 @@ namespace ValheimVRM
 					assetBundle.Unload(false);
 				}
 			}
+			else
+			{
+				Debug.LogWarning("[ValheimVRM] Shader AssetBundle not found at: " + bundlePath);
+			}
 			_initialized = true;
 		}
 	}
@@ -100,10 +99,16 @@ namespace ValheimVRM
 		public static Dictionary<Player, GameObject> PlayerToVrmInstance = new Dictionary<Player, GameObject>();
 		public static Dictionary<Player, string> PlayerToName = new Dictionary<Player, string>();
 		public static Dictionary<string, VRM> VrmDic = new Dictionary<string, VRM>();
+		public static Dictionary<string, byte[]> VrmHashes = new Dictionary<string, byte[]>(); // Store VRM hashes for lifecycle
 
-		public static VRM RegisterVrm(VRM vrm, LODGroup sampleLODGroup, Player player)
+		public static VRM RegisterVrm(VRM vrm, LODGroup sampleLODGroup, Player player, byte[] vrmHash)
 		{
 			if (vrm.VisualModel == null) return null;
+
+			// Pre-acquire VRM state at the very beginning
+			Debug.Log($"[VrmTextureCache] 💽 RegisterVrm started for '{vrm.Name}' with hash: {vrmHash.GetHaxadecimalString()}");
+			VrmTextureCache.RegisterVrm(vrm.Name, vrmHash);
+			VrmManager.VrmHashes[vrm.Name] = vrmHash;
 
 			foreach (var registered in VrmDic)
 			{
@@ -134,21 +139,7 @@ namespace ValheimVRM
 
 			VrmDic[vrm.Name] = vrm;
 
-			//[Error: Unity Log] _Cutoff: Range
-			//[Error: Unity Log] _MainTex: Texture
-			//[Error: Unity Log] _SkinBumpMap: Texture
-			//[Error: Unity Log] _SkinColor: Color
-			//[Error: Unity Log] _ChestTex: Texture
-			//[Error: Unity Log] _ChestBumpMap: Texture
-			//[Error: Unity Log] _ChestMetal: Texture
-			//[Error: Unity Log] _LegsTex: Texture
-			//[Error: Unity Log] _LegsBumpMap: Texture
-			//[Error: Unity Log] _LegsMetal: Texture
-			//[Error: Unity Log] _BumpScale: Float
-			//[Error: Unity Log] _Glossiness: Range
-			//[Error: Unity Log] _MetalGlossiness: Range
-
-			// Shader replacement
+			// Shader replacement and material processing with cache integration
 			var settings = Settings.GetSettings(vrm.Name);
 			var materials = new List<Material>();
 			foreach (var smr in vrm.VisualModel.GetComponentsInChildren<SkinnedMeshRenderer>())
@@ -166,9 +157,79 @@ namespace ValheimVRM
 				}
 			}
 
+			// VrmTextureCache Integration: Process materials using cache and shader colors
+			Shader foundShader = Shader.Find("Custom/Player");
+			int textureCount = 0;
+			var totalStartTime = System.Diagnostics.Stopwatch.StartNew();
 
-			CoroutineHelper.Instance.StartCoroutine(ProcessMaterialsCoroutine(vrm, materials, settings));
+			Debug.Log($"[ValheimVRM] 🖌️ Processing {materials.Count} materials for \"{vrm.Name}\" VRM  |  UseMToonShader {settings.UseMToonShader}");
 
+			foreach (var mat in materials)
+			{
+				var processedTextures = new List<string>();
+
+				if (settings.UseMToonShader && mat.HasProperty("_Color"))
+				{
+					// MToon: Apply brightness to _Color property
+					var color = mat.GetColor("_Color");
+					color.r *= settings.ModelBrightness;
+					color.g *= settings.ModelBrightness;
+					color.b *= settings.ModelBrightness;
+					mat.SetColor("_Color", color);
+
+					Debug.Log($"[ValheimVRM] 🖌️ Converted \"{mat.name}\"");
+					continue;
+				}
+
+				if (settings.UseMToonShader || mat.shader == foundShader)
+				{
+					continue;
+				}
+
+				var colorFix = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
+				var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
+				var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") as Texture2D : null;
+
+				if (mainTex != null)
+				{
+					textureCount++;
+					var mainKey = VrmTextureCache.GetTextureKey(mainTex);
+					if (mainKey.HasValue)
+					{
+						VrmTextureCache.LinkTextureToVrm(vrm.Name, vrmHash, mainKey.Value);
+					}
+					processedTextures.Add($"\"{mainTex.name}\"  |  {mainTex.width}x{mainTex.height}  |  {mainTex.format}");
+				}
+
+				if (bumpMap != null)
+				{
+					textureCount++;
+					var bumpKey = VrmTextureCache.GetTextureKey(bumpMap);
+					if (bumpKey.HasValue)
+					{
+						VrmTextureCache.LinkTextureToVrm(vrm.Name, vrmHash, bumpKey.Value);
+					}
+					processedTextures.Add($"\"{bumpMap.name}\"  |  {bumpMap.width}x{bumpMap.height}  |  {bumpMap.format}");
+				}
+
+				// Apply shader properties using original textures - colors via shader overlay
+				Utils.ApplyMaterialProperties(mat, foundShader, mainTex, bumpMap, colorFix);
+
+				Debug.Log($"[ValheimVRM] 🖌️ Converted \"{mat.name}\"");
+
+				foreach (var textureInfo in processedTextures)
+				{
+					Debug.Log($"[ValheimVRM]     {textureInfo}");
+				}
+			}
+
+			totalStartTime.Stop();
+			Debug.Log($"[ValheimVRM] 🖌️ Finished processing {materials.Count} materials for VRM '{vrm.Name}' in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+
+			if (!settings.UseMToonShader)
+			{
+				Utils.SendNotification($"ValheimVRM - {vrm.Name} - Processed {textureCount} textures via cache in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
+			}
 
 			var lodGroup = vrm.VisualModel.AddComponent<LODGroup>();
 			if (settings.EnablePlayerFade)
@@ -188,120 +249,89 @@ namespace ValheimVRM
 			return vrm;
 		}
 
-		public static IEnumerator ProcessMaterialsCoroutine(VRM vrm, List<Material> materials, Settings.VrmSettingsContainer settings)
+		private static IEnumerator LoadVrm(Player player, string playerName, string localPlayerName, string path, float scale, bool settingsUpdated, Settings.VrmSettingsContainer settings, bool isShared = false)
 		{
-			var totalStartTime = System.Diagnostics.Stopwatch.StartNew();
-			Shader foundShader = Shader.Find("Custom/Player");
+			Task<byte[]> bytesTask = Task.Run(() => File.ReadAllBytes(path));
 
-			Debug.Log($"[ValheimVRM] 🖌️ Processing {materials.Count} materials for \"{vrm.Name}\" VRM  |  UseMToonShader {settings.UseMToonShader}  |  AttemptTextureFix {settings.AttemptTextureFix}");
-
-			Utils.SendNotification($"ValheimVRM - {vrm.Name} - Processing {materials.Count} materials...", MessageHud.MessageType.TopLeft);
-
-			foreach (var mat in materials)
+			while (!bytesTask.IsCompleted)
 			{
-				var materialStartTime = System.Diagnostics.Stopwatch.StartNew();
-				var originalShaderName = mat.shader?.name ?? "NULL";
-				var processedTextures = new List<string>();
-
-				if (settings.UseMToonShader && !settings.AttemptTextureFix && mat.HasProperty("_Color"))
-				{
-					var color = mat.GetColor("_Color");
-					color.r *= settings.ModelBrightness;
-					color.g *= settings.ModelBrightness;
-					color.b *= settings.ModelBrightness;
-					mat.SetColor("_Color", color);
-
-					materialStartTime.Stop();
-					Debug.Log($"[ValheimVRM] 🖌️ Loaded \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
-				}
-				else if (settings.AttemptTextureFix)
-				{
-					if (mat.shader != foundShader)
-					{
-						var color = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white;
-						var mainTex = mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-						Texture2D tex = mainTex;
-
-						if (mainTex != null)
-						{
-							processedTextures.Add($"\"{mainTex.name}\"  |  {mainTex.width}x{mainTex.height}  |  {mainTex.format}");
-
-							if (!mainTex.isReadable)
-							{
-								Debug.LogError($"[ValheimVRM] 🖌️ CRITICAL: Texture '{mainTex.name}' is NOT readable! Cannot call GetPixels(). Skipping texture processing for material {mat.name}");
-							}
-							else
-							{
-								tex = new Texture2D(mainTex.width, mainTex.height);
-
-								if (mainTex.isReadable)
-								{
-									var pixels = mainTex.GetPixels();
-
-									var pixelsTask = Task.Run(() =>
-									{
-										for (int i = 0; i < pixels.Length; i++)
-										{
-											var col = pixels[i] * color;
-											Color.RGBToHSV(col, out float h, out float s, out float v);
-											v *= settings.ModelBrightness;
-											pixels[i] = Color.HSVToRGB(h, s, v, true);
-											pixels[i].a = col.a;
-										}
-									});
-
-									while (!pixelsTask.IsCompleted)
-									{
-										yield return new WaitUntil(() => pixelsTask.IsCompleted);
-									}
-
-									pixelsTask.Wait();
-
-									tex.SetPixels(pixels);
-									tex.Apply();
-								}
-							}
-						}
-
-						var bumpMap = mat.HasProperty("_BumpMap") ? mat.GetTexture("_BumpMap") as Texture2D : null;
-						if (bumpMap != null)
-						{
-							processedTextures.Add($"\"{bumpMap.name}\"  |  {bumpMap.width}x{bumpMap.height}  |  {bumpMap.format}");
-						}
-
-						mat.shader = foundShader;
-						mat.SetTexture("_MainTex", tex);
-						mat.SetTexture("_SkinBumpMap", bumpMap);
-						mat.SetColor("_SkinColor", color);
-						mat.SetTexture("_ChestTex", tex);
-						mat.SetTexture("_ChestBumpMap", bumpMap);
-						mat.SetTexture("_LegsTex", tex);
-						mat.SetTexture("_LegsBumpMap", bumpMap);
-						mat.SetFloat("_Glossiness", 0.2f);
-						mat.SetFloat("_MetalGlossiness", 0.0f);
-
-						materialStartTime.Stop();
-						Debug.Log($"[ValheimVRM] 🖌️ Converted \"{mat.name}\" in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
-
-						Utils.SendNotification($"ValheimVRM - \"{vrm.Name}\" - Converted {mat.name} in {materialStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
-
-						foreach (var textureInfo in processedTextures)
-						{
-							Debug.Log($"[ValheimVRM]     {textureInfo}");
-						}
-					}
-				}
-
-				yield return null;
+				yield return new WaitUntil(() => bytesTask.IsCompleted);
 			}
 
-			totalStartTime.Stop();
-			Debug.Log($"[ValheimVRM] 🖌️ Finished processing {materials.Count} materials for VRM '{vrm.Name}' in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds");
+			if (bytesTask.IsFaulted)
+			{
+				Debug.LogError($"Error loading VRM: {bytesTask.Exception.Flatten().InnerException}");
+				yield break;
+			}
 
-			Utils.SendNotification($"ValheimVRM - {vrm.Name} - All materials processed in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
+			byte[] vrmBytes = bytesTask.Result;
+			byte[] vrmHash = null;
+			using (var sha256 = SHA256.Create())
+			{
+				vrmHash = sha256.ComputeHash(vrmBytes);
+				Debug.Log($"[VrmTextureCache] 💽 Computed VRM hash for '{playerName}': {vrmHash.GetHaxadecimalString()}");
+			}
+
+			yield return player.StartCoroutine(VRM.ImportVisualAsync(vrmBytes, path, settings.ModelScale, loadedRoot =>
+			{
+				if (loadedRoot != null)
+				{
+					var vrm = CreateVrm(loadedRoot, player, vrmBytes, playerName, vrmHash, isShared);
+					if (vrm != null)
+					{
+						SetVrm(player, vrm, settingsUpdated);
+					}
+				}
+			}));
 		}
-	}
 
+		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, byte[] vrmHash, bool isShared = false)
+		{
+			VRM vrm = new VRM(vrmVisual, name);
+			vrm = VrmManager.RegisterVrm(vrm, player.GetComponentInChildren<LODGroup>(), player, vrmHash);
+
+			if (vrm != null)
+			{
+				vrm.Src = bytes;
+				vrm.RecalculateSrcBytesHash();
+
+				if (isShared)
+				{
+					vrm.Source = VRM.SourceType.Shared;
+				}
+			}
+
+			return vrm;
+		}
+
+		private static void SetVrm(Player player, VRM vrm, bool settingsUpdated)
+		{
+			if (vrm != null)
+			{
+				if (settingsUpdated)
+				{
+					vrm.RecalculateSettingsHash();
+				}
+
+				CoroutineHelper.Instance.StartCoroutine(vrm.SetToPlayer(player));
+			}
+		}
+
+		[HarmonyPatch(typeof(Player), "OnDestroy")]
+		static class Patch_Player_OnDestroy
+		{
+			[HarmonyPostfix]
+			static void Postfix(Player __instance)
+			{
+				// Don't dispose VRM texture state here. Player may reload the VRM again later.
+
+				VrmManager.PlayerToName.Remove(__instance);
+				VrmManager.PlayerToVrmInstance.Remove(__instance);
+			}
+		}
+
+		// Removed: ProcessMaterialsCoroutine - see Texture Cache.md for historical code
+	}
 
 	[HarmonyPatch(typeof(VisEquipment), "UpdateLodgroup")]
 	static class Patch_VisEquipment_UpdateLodgroup
@@ -701,18 +731,6 @@ namespace ValheimVRM
 		}
 	}
 
-	[HarmonyPatch(typeof(Player), "OnDestroy")]
-	static class Patch_Player_OnDestroy
-	{
-		[HarmonyPostfix]
-		static void Postfix(Player __instance)
-		{
-			VrmManager.PlayerToName.Remove(__instance);
-			VrmManager.PlayerToVrmInstance.Remove(__instance);
-		}
-	}
-
-
 	[HarmonyPatch(typeof(Player), "Awake")]
 	static class Patch_Player_Awake
 	{
@@ -768,7 +786,10 @@ namespace ValheimVRM
 				var path = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", $"{playerName}.vrm");
 				var sharedPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "Shared", $"{playerName}.vrm");
 
-				if (!Settings.ContainsSettings(playerName) || Settings.globalSettings.ReloadInMenu && isInMenu)
+				bool settingsNotLoaded = !Settings.ContainsSettings(playerName);
+				bool shouldReloadSettingsInMenu = Settings.globalSettings.ReloadInMenu && isInMenu;
+				bool shouldLoadSettings = settingsNotLoaded || shouldReloadSettingsInMenu;
+				if (shouldLoadSettings)
 				{
 					if (File.Exists(path))
 					{
@@ -788,7 +809,10 @@ namespace ValheimVRM
 
 				if (settings != null)
 				{
-					if (!VrmManager.VrmDic.ContainsKey(playerName) || Settings.globalSettings.ReloadInMenu && isInMenu)
+					bool vrmNotLoaded = !VrmManager.VrmDic.ContainsKey(playerName);
+					bool shouldReloadInMenu = isInMenu && Settings.globalSettings.ReloadInMenu;
+					bool shouldLoadVrm = vrmNotLoaded || shouldReloadInMenu;
+					if (shouldLoadVrm)
 					{
 						string vrmPath = null;
 						bool isShared = false;
@@ -857,10 +881,10 @@ namespace ValheimVRM
 			}
 		}
 
-		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, bool isShared = false)
+		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, byte[] vrmHash, bool isShared = false)
 		{
 			VRM vrm = new VRM(vrmVisual, name);
-			vrm = VrmManager.RegisterVrm(vrm, player.GetComponentInChildren<LODGroup>(), player);
+			vrm = VrmManager.RegisterVrm(vrm, player.GetComponentInChildren<LODGroup>(), player, vrmHash);
 
 			if (vrm != null)
 			{
@@ -894,11 +918,19 @@ namespace ValheimVRM
 				yield break;
 			}
 
-			yield return player.StartCoroutine(VRM.ImportVisualAsync(bytesTask.Result, path, settings.ModelScale, loadedRoot =>
+			byte[] vrmBytes = bytesTask.Result;
+			byte[] vrmHash = null;
+			using (var sha256 = SHA256.Create())
+			{
+				vrmHash = sha256.ComputeHash(vrmBytes);
+				Debug.Log($"[VrmTextureCache] 💽 Computed VRM hash for '{playerName}': {vrmHash.GetHaxadecimalString()}");
+			}
+
+			yield return player.StartCoroutine(VRM.ImportVisualAsync(vrmBytes, path, settings.ModelScale, loadedRoot =>
 			{
 				if (loadedRoot != null)
 				{
-					var vrm = CreateVrm(loadedRoot, player, bytesTask.Result, playerName, isShared);
+					var vrm = CreateVrm(loadedRoot, player, vrmBytes, playerName, vrmHash, isShared);
 					if (vrm != null)
 					{
 						SetVrm(player, vrm, settingsUpdated);

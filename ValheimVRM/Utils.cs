@@ -104,5 +104,22 @@ namespace ValheimVRM
 			}
 			return null;
 		}
+
+		/// <summary>
+		/// Applies all material properties for Valheim player shader
+		/// </summary>
+		public static void ApplyMaterialProperties(Material mat, Shader shader, Texture2D tex, Texture2D bumpMap, Color color)
+		{
+			mat.shader = shader;
+			mat.SetTexture("_MainTex", tex);
+			mat.SetTexture("_SkinBumpMap", bumpMap);
+			mat.SetColor("_SkinColor", color);
+			mat.SetTexture("_ChestTex", tex);
+			mat.SetTexture("_ChestBumpMap", bumpMap);
+			mat.SetTexture("_LegsTex", tex);
+			mat.SetTexture("_LegsBumpMap", bumpMap);
+			mat.SetFloat("_Glossiness", 0.2f);
+			mat.SetFloat("_MetalGlossiness", 0.0f);
+		}
 	}
 }

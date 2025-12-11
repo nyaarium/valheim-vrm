@@ -545,10 +545,17 @@ namespace ValheimVRM
 						var scale = settings.ModelScale;
 
 						byte[] vrmBytes = process.GetVrmData();
+						// Compute VRM hash for texture cache
+						byte[] vrmHash = null;
+						using (var sha256 = System.Security.Cryptography.SHA256.Create())
+						{
+							vrmHash = sha256.ComputeHash(vrmBytes);
+						}
+
 						// GameObject go = new GameObject("VRMGameObject");
 						// VRM newVrm = go.AddComponent<VRM>().Setup(await VRM.ImportVisualAsync(process.GetVrmData(), vrmPath, scale), vrmName); 
 						VRM newVrm = new VRM(VRM.ImportVisual(process.GetVrmData(), vrmPath, scale), vrmName);
-						newVrm = VrmManager.RegisterVrm(newVrm, player.GetComponentInChildren<LODGroup>(), player);
+						newVrm = VrmManager.RegisterVrm(newVrm, player.GetComponentInChildren<LODGroup>(), player, vrmHash);
 						if (newVrm != null)
 						{
 							newVrm.Source = VRM.SourceType.Shared;
