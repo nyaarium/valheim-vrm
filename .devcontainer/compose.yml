@@ -12,6 +12,5 @@ services:
       - ../volumes/home:/home/vscode:cached
       # Workspace
       - ..:/valheim-vrm:cached
-      # Additional custom environments and scripts
-      - ~/.env:/home/vscode/.env:ro
+      # Additional scripts
       - ~/scripts:/home/vscode/scripts:ro
