@@ -3,8 +3,11 @@
 	"dockerComposeFile": "compose.yml",
 	"service": "dev",
 	"remoteUser": "vscode",
-	"workspaceFolder": "/valheim-vrm",
+	"updateRemoteUserUID": true,
+	"workspaceFolder": "/workspace/valheim-vrm",
 	"initializeCommand": ".devcontainer/init-home.sh",
+	"postCreateCommand": "/var/post-create.sh",
+	"postStartCommand": "/var/post-start.sh",
 	"customizations": {
 		"vscode": {
 			"extensions": [

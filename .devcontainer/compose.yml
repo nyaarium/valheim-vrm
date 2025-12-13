@@ -8,9 +8,9 @@ services:
       args:
         PROJECT_NAME: valheim-vrm
     volumes:
+      # Workspace
+      - ..:/workspace/valheim-vrm:cached
       # Home
       - ../volumes/home:/home/vscode:cached
-      # Workspace
-      - ..:/valheim-vrm:cached
       # Additional scripts
       - ~/scripts:/home/vscode/scripts:ro
