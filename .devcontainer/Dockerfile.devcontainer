@@ -1,11 +1,5 @@
 FROM debian:trixie
 
-ARG PROJECT_NAME
-RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg is required" && exit 1) \
-    && mkdir -p /$PROJECT_NAME \
-	&& ln -sf /$PROJECT_NAME /workspace	\
-	&& rmdir /$PROJECT_NAME
-
 # Switch to apt noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -29,6 +23,7 @@ RUN apt update && apt install -y \
 	iftop \
 	jq \
 	less \
+	lsof \
 	make \
 	man \
 	ncdu \
@@ -52,15 +47,19 @@ RUN apt update && apt install -y \
 # Install Cursor agent
 RUN curl -fsSL https://cursor.com/install | bash
 
+# GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
 	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
 	&& apt update && apt install -y gh \
 	&& apt clean && rm -rf /var/lib/apt/lists/*
 
-RUN NODE_MAJOR=22 \
+# Node.js
+RUN NODE_MAJOR=24 \
 	&& curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
 	&& echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
 	&& apt update && apt install -y nodejs \
+	&& npm install -g npm@latest \
+	&& npm config set -g update-notifier false \
 	&& corepack enable \
 	&& corepack prepare yarn@stable --activate \
 	&& apt clean && rm -rf /var/lib/apt/lists/*
@@ -136,5 +135,12 @@ RUN groupadd -r vscode \
 	&& echo "vscode:vscode" | chpasswd \
 	&& echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode
 
+ARG PROJECT_NAME
+ENV PROJECT_NAME=$PROJECT_NAME
+RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg is required" && exit 1) \
+    && mkdir -p /workspace/$PROJECT_NAME \
+	&& chown vscode:vscode /workspace /workspace/$PROJECT_NAME
+
+COPY .devcontainer/post-*.sh /var/
 COPY .devcontainer/.bashrc-root /root/.bashrc
 COPY .devcontainer/.bashrc-user /home/vscode/.bashrc

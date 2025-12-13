@@ -152,7 +152,8 @@ if [ -z "$(git config --global user.name)" ]; then
     echo ""
 fi
 
-export PAGER=cat
+
+# Devcontainer: v1
 
 # Git config
 git config --global core.editor "cursor"
