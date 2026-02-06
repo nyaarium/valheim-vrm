@@ -62,17 +62,19 @@ RUN NODE_MAJOR=24 \
 	&& npm config set -g update-notifier false \
 	&& corepack enable \
 	&& corepack prepare yarn@stable --activate \
+	&& rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/keyrings/nodesource.gpg \
 	&& apt clean && rm -rf /var/lib/apt/lists/*
 
 
 ############################
 # .NET SDK
 
-RUN wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
-	&& dpkg -i packages-microsoft-prod.deb \
-	&& rm packages-microsoft-prod.deb \
-	&& apt update \
-	&& apt install -y dotnet-sdk-8.0 \
+RUN apt update && apt install -y libicu-dev \
+	&& curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+	&& chmod +x /tmp/dotnet-install.sh \
+	&& /tmp/dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet --no-path \
+	&& ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet \
+	&& rm /tmp/dotnet-install.sh \
 	&& apt clean && rm -rf /var/lib/apt/lists/*
 
 
@@ -143,4 +145,3 @@ RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg
 
 COPY .devcontainer/post-*.sh /var/
 COPY .devcontainer/.bashrc-root /root/.bashrc
-COPY .devcontainer/.bashrc-user /home/vscode/.bashrc

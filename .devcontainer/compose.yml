@@ -13,4 +13,5 @@ services:
       # Home
       - ../volumes/home:/home/vscode:cached
       # Additional scripts
+      - ~/.cursor/mcp.json:/home/vscode/.cursor/mcp.json:ro
       - ~/scripts:/home/vscode/scripts:ro
