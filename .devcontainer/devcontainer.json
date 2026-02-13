@@ -6,12 +6,13 @@
 	"updateRemoteUserUID": true,
 	"workspaceFolder": "/workspace/valheim-vrm",
 	"initializeCommand": ".devcontainer/init-home.sh",
-	"postCreateCommand": "/var/post-create.sh",
+	"postCreateCommand": "sudo /var/post-create.sh",
 	"postStartCommand": "/var/post-start.sh",
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"anysphere.pyright",
+				"Anthropic.claude-code",
 				"antfu.browse-lite",
 				"anysphere.csharp",
 				"BlueGlassBlock.better-json5",
@@ -21,6 +22,7 @@
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"github.vscode-github-actions",
+				"github.vscode-pull-request-github",
 				"mechatroner.rainbow-csv",
 				"mhutchie.git-graph",
 				"mikestead.dotenv",
