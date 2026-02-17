@@ -18,6 +18,30 @@ if [ ! -f "${VOLUME_HOME}/.bashrc" ]; then
     cp "${DEV_CONTAINER}/.bashrc-user" "${VOLUME_HOME}/.bashrc"
     chmod 644 "${VOLUME_HOME}/.bashrc"
 elif ! grep -q "${VERSION_STRING}" "${VOLUME_HOME}/.bashrc" 2>/dev/null; then
+    rm "${VOLUME_HOME}/.bashrc" "${VOLUME_HOME}/.gitconfig"
     cp "${DEV_CONTAINER}/.bashrc-user" "${VOLUME_HOME}/.bashrc"
     chmod 644 "${VOLUME_HOME}/.bashrc"
+fi
+
+if [ ! -f "${VOLUME_HOME}/.gitconfig" ]; then
+    cat > "${VOLUME_HOME}/.gitconfig" <<EOF
+[core]
+	editor = cursor
+[commit]
+	gpgSign = false
+[safe]
+	directory = /workspace
+EOF
+
+    chmod 644 "${VOLUME_HOME}/.gitconfig"
+
+    HOST_NAME=$(git config --global user.name)
+    HOST_EMAIL=$(git config --global user.email)
+    if [ -n "${HOST_NAME}" ] && [ -n "${HOST_EMAIL}" ]; then
+        cat >> "${VOLUME_HOME}/.gitconfig" <<EOF
+[user]
+	name = ${HOST_NAME}
+	email = ${HOST_EMAIL}
+EOF
+    fi
 fi

@@ -138,34 +138,7 @@ __bash_prompt
 export PROMPT_DIRTRIM=4
 
 
-if [ -z "$(git config --global user.name)" ]; then
-    if [ -z "${CODESPACES}" ]; then
-        echo "⚠️   If you never set up SSH agent before, run once on your host machine:"
-        echo "    .devcontainer/install-ssh-agent.sh"
-        echo ""
-    fi
-
-    echo "Git is not configured. Be sure to set:"
-    echo "    git config --global user.name \"...\""
-    echo "    git config --global user.email \"...\""
-    echo ""
-    echo ""
-fi
-
-
-# Devcontainer: v1
-
-# Git config
-git config --global core.editor "cursor"
-
-# Unconfigure key signing, for when the user has it enabled on the host machine
-git config --global --unset gpg.format
-git config --global --unset user.signingKey
-git config --global commit.gpgsign false
-
-# Trust the workspace folder
-git config --global --add safe.directory /workspace
-
+# Devcontainer: v2
 
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/scripts:$PATH"
