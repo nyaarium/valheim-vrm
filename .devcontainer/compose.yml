@@ -15,3 +15,8 @@ services:
       # Additional scripts
       - ~/.cursor/mcp.json:/home/vscode/.cursor/mcp.json:ro
       - ~/scripts:/home/vscode/scripts:ro
+    networks:
+      - agent-team-bridge-network
+networks:
+  agent-team-bridge-network:
+    name: agent-team-bridge
