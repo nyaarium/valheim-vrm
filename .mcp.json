@@ -1,0 +1,12 @@
+{
+	"mcpServers": {
+		"agent-team-bridge": {
+			"command": "node",
+			"args": ["/agent-team-bridge/mcp/server.js"],
+			"env": {
+				"BRIDGE_ROUTER_URL": "http://agent-team-bridge:5678",
+				"BRIDGE_AGENT_TYPE": "claude"
+			}
+		}
+	}
+}

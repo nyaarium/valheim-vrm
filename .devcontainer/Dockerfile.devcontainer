@@ -40,6 +40,7 @@ RUN apt update && apt install -y \
 	uuid \
 	vim \
 	wget \
+	yq \
 	zip \
 	&& apt autoremove --purge -y \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
@@ -154,3 +155,8 @@ RUN mkdir -p /var/agent-install \
 
 COPY .devcontainer/post-*.sh /var/
 COPY .devcontainer/.bashrc-root /root/.bashrc
+
+# Agent Team Bridge
+ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+RUN git clone --depth 1 https://github.com/atelier-nyaarium/agent-team-bridge.git /agent-team-bridge \
+    && cd /agent-team-bridge/mcp && npm i --silent
