@@ -1,4 +1,4 @@
-FROM debian:trixie
+FROM ubuntu:noble
 
 # Switch to apt noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
