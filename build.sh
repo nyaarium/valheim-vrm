@@ -8,15 +8,12 @@ cd "$(dirname "$0")"
 ROOT="$(pwd)"
 VALHEIM_INSTALL_PATH=/var/build-dlls
 UNIVRM_UNITY_LIBS="$ROOT/Libs"
-PROJECT_DIR="$ROOT/ValheimVRM"
-OUT_DLL="$PROJECT_DIR/bin/Release/net471/ValheimVRM.dll"
 
-cd "$PROJECT_DIR"
-
+cd "$ROOT"
 dotnet build -c Release
 
 # Extract version info
-VERSION=$(grep -oP 'PluginVersion = "([^"]+)"' VersionInfo.g.cs | cut -d'"' -f2)
+VERSION=$(grep -oP 'PluginVersion = "([^"]+)"' src/VersionInfo.g.cs | cut -d'"' -f2)
 FILENAME=$(ls "$ROOT"/release/*.zip | head -1 | xargs basename)
 CHECKSUM=$(sha256sum "$ROOT/release/$FILENAME" | cut -d' ' -f1)
 

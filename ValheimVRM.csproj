@@ -4,7 +4,12 @@
 		<OutputType>Library</OutputType>
 		<Version>1.6.0</Version>
 		<TargetFramework>net471</TargetFramework>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="src/**/*.cs" />
+	</ItemGroup>
 
 	<!-- Valheim root: Windows = VALHEIM_INSTALL_PATH. Linux = /mnt/valheim if that mount has BepInEx, else VALHEIM_INSTALL_PATH (e.g. CI runner). -->
 	<PropertyGroup>
@@ -23,9 +28,9 @@
 		<Error Condition="'$(VALHEIM_ROOT)' != '' and !Exists('$(VALHEIM_ROOT)/BepInEx/core')" Text="BepInEx core DLLs not found at: $(VALHEIM_ROOT)/BepInEx/core" />
 	</Target>
 
-	<!-- Project configuration and paths -->
+	<!-- Project configuration and paths (csproj at repo root) -->
 	<PropertyGroup>
-		<ROOT_DIR>$(MSBuildProjectDirectory)/..</ROOT_DIR>
+		<ROOT_DIR>$(MSBuildProjectDirectory)</ROOT_DIR>
 
 		<!-- Source for DLL references during build -->
 		<VALHEIM_MANAGED>$(VALHEIM_ROOT)/valheim_Data/Managed</VALHEIM_MANAGED>
@@ -104,9 +109,9 @@
 	</PropertyGroup>
 
 
-	<!-- Version Info -->
+	<!-- Version Info (generated under src so Compile picks it up) -->
 	<PropertyGroup>
-		<VersionInfoFile>$(MSBuildProjectDirectory)/VersionInfo.g.cs</VersionInfoFile>
+		<VersionInfoFile>$(MSBuildProjectDirectory)/src/VersionInfo.g.cs</VersionInfoFile>
 	</PropertyGroup>
 	<Target Name="GenerateVersionInfo" BeforeTargets="CoreCompile">
 		<ItemGroup>
