@@ -1,29 +1,43 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<Version>1.6.0</Version>
 		<TargetFramework>net471</TargetFramework>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	</PropertyGroup>
 
-	<!-- Validate required environment variables -->
+	<ItemGroup>
+		<Compile Include="src/**/*.cs" />
+	</ItemGroup>
+
+	<!-- Valheim root: Windows = VALHEIM_INSTALL_PATH. Linux = /mnt/valheim if that mount has BepInEx, else VALHEIM_INSTALL_PATH (e.g. CI runner). -->
+	<PropertyGroup>
+		<VALHEIM_ROOT Condition="'$(OS)' == 'Windows_NT'">$(VALHEIM_INSTALL_PATH)</VALHEIM_ROOT>
+		<VALHEIM_ROOT Condition="'$(OS)' != 'Windows_NT' and Exists('/mnt/valheim/BepInEx')">/mnt/valheim</VALHEIM_ROOT>
+		<VALHEIM_ROOT Condition="'$(OS)' != 'Windows_NT' and !Exists('/mnt/valheim/BepInEx')">$(VALHEIM_INSTALL_PATH)</VALHEIM_ROOT>
+	</PropertyGroup>
+
+	<!-- Validate required environment / paths -->
 	<Target Name="ValidateEnvironment" BeforeTargets="PrepareForBuild">
-		<Error Condition="'$(VALHEIM_INSTALL_PATH)' == ''" Text="VALHEIM_INSTALL_PATH environment variable is not set. Please set it to your Valheim installation directory (ex: C:\Steam\steamapps\common\Valheim)" />
-		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)')" Text="VALHEIM_INSTALL_PATH directory does not exist: $(VALHEIM_INSTALL_PATH)" />
-		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed')" Text="Valheim Managed DLLs not found at: $(VALHEIM_INSTALL_PATH)/valheim_Data/Managed" />
-		<Error Condition="!Exists('$(VALHEIM_INSTALL_PATH)/BepInEx/core')" Text="BepInEx core DLLs not found at: $(VALHEIM_INSTALL_PATH)/BepInEx/core" />
+		<Error Condition="'$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' == ''" Text="VALHEIM_INSTALL_PATH environment variable is not set. Please set it to your Valheim installation directory (ex: C:\Steam\steamapps\common\Valheim)" />
+		<Error Condition="'$(OS)' == 'Windows_NT' and !Exists('$(VALHEIM_INSTALL_PATH)')" Text="VALHEIM_INSTALL_PATH directory does not exist: $(VALHEIM_INSTALL_PATH)" />
+		<Error Condition="'$(OS)' != 'Windows_NT' and '$(VALHEIM_ROOT)' == ''" Text="On Linux: either mount Valheim at /mnt/valheim (with BepInEx) or set VALHEIM_INSTALL_PATH (e.g. in CI)" />
+		<Error Condition="'$(OS)' != 'Windows_NT' and '$(VALHEIM_ROOT)' != '' and !Exists('$(VALHEIM_ROOT)')" Text="VALHEIM_ROOT directory does not exist: $(VALHEIM_ROOT)" />
+		<Error Condition="'$(VALHEIM_ROOT)' != '' and !Exists('$(VALHEIM_ROOT)/valheim_Data/Managed')" Text="Valheim Managed DLLs not found at: $(VALHEIM_ROOT)/valheim_Data/Managed" />
+		<Error Condition="'$(VALHEIM_ROOT)' != '' and !Exists('$(VALHEIM_ROOT)/BepInEx/core')" Text="BepInEx core DLLs not found at: $(VALHEIM_ROOT)/BepInEx/core" />
 	</Target>
 
-	<!-- Project configuration and paths -->
+	<!-- Project configuration and paths (csproj at repo root) -->
 	<PropertyGroup>
-		<ROOT_DIR>$(MSBuildProjectDirectory)/..</ROOT_DIR>
+		<ROOT_DIR>$(MSBuildProjectDirectory)</ROOT_DIR>
 
 		<!-- Source for DLL references during build -->
-		<VALHEIM_MANAGED>$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed</VALHEIM_MANAGED>
-		<VALHEIM_BEPINEX_CORE>$(VALHEIM_INSTALL_PATH)/BepInEx/core</VALHEIM_BEPINEX_CORE>
+		<VALHEIM_MANAGED>$(VALHEIM_ROOT)/valheim_Data/Managed</VALHEIM_MANAGED>
+		<VALHEIM_BEPINEX_CORE>$(VALHEIM_ROOT)/BepInEx/core</VALHEIM_BEPINEX_CORE>
 
 		<!-- Path to Valheim install for copying built files (rapid updates) -->
-		<VALHEIM_PLUGINS_PATH>$(VALHEIM_INSTALL_PATH)/BepInEx/plugins</VALHEIM_PLUGINS_PATH>
+		<VALHEIM_PLUGINS_PATH>$(VALHEIM_ROOT)/BepInEx/plugins</VALHEIM_PLUGINS_PATH>
 
 		<LIBS>$(ROOT_DIR)/Libs</LIBS>
 		<LIBS_MANAGED>$(LIBS)/Managed</LIBS_MANAGED>
@@ -95,9 +109,9 @@
 	</PropertyGroup>
 
 
-	<!-- Version Info -->
+	<!-- Version Info (generated under src so Compile picks it up) -->
 	<PropertyGroup>
-		<VersionInfoFile>$(MSBuildProjectDirectory)/VersionInfo.g.cs</VersionInfoFile>
+		<VersionInfoFile>$(MSBuildProjectDirectory)/src/VersionInfo.g.cs</VersionInfoFile>
 	</PropertyGroup>
 	<Target Name="GenerateVersionInfo" BeforeTargets="CoreCompile">
 		<ItemGroup>
@@ -118,15 +132,15 @@
 		</ItemGroup>
 		<Delete Files="@(OldZipFiles)" ContinueOnError="true" />
 
-		<!-- Delete old files from BepInEx plugins directory (only on Windows) -->
-		<ItemGroup Condition=" '$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' != '' ">
-			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)\ValheimVRM\$(TargetFileName)" />
-			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)\ValheimVRM\UniVRM.shaders" />
+		<!-- Delete old files from BepInEx plugins directory (only when plugin folder exists: update existing install) -->
+		<ItemGroup Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
+			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetFileName)" />
+			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/UniVRM.shaders" />
 
-			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)\ValheimVRM\$(TargetName).pdb" />
-			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)\ValheimVRM\$(TargetFileName).mdb" />
+			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetName).pdb" />
+			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetFileName).mdb" />
 		</ItemGroup>
-		<Delete Condition=" '$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' != '' " Files="@(OldInstallFiles)" ContinueOnError="true" />
+		<Delete Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " Files="@(OldInstallFiles)" ContinueOnError="true" />
 
 		<!-- Copy files -->
 		<ItemGroup>
@@ -160,25 +174,25 @@
 		<!-- DEBUG BUILD STUFF -->
 		<Exec Condition=" '$(Configuration)' == 'Debug' " Command="&quot;$(Pdb2MdbPath)&quot; &quot;$(TargetPath)&quot;" />
 
-		<!-- Copy debug files to local Valheim installation (only on Windows) -->
-		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' != '' ">
+		<!-- Copy debug files to local Valheim installation (only when plugin folder exists) -->
+		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<DebugFiles Include="$(TargetPath)" />
 			<DebugFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 
 			<DebugFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
 			<DebugFiles Include="$(TargetDir)$(TargetFileName).mdb" Condition="Exists('$(TargetDir)$(TargetFileName).mdb')" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Debug' and '$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' != '' " SourceFiles="@(DebugFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(DebugFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
 
 
 		<!-- RELEASE BUILD STUFF -->
 
-		<!-- Copy release files to local Valheim installation (only on Windows) -->
-		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' != '' ">
+		<!-- Copy release files to local Valheim installation (only when plugin folder exists) -->
+		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<ReleaseFiles Include="$(TargetPath)" />
 			<ReleaseFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' and '$(VALHEIM_INSTALL_PATH)' != '' " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
 
 		<!-- Clean release directory -->
 		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(FINAL_RELEASE)" ContinueOnError="true" />

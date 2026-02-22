@@ -45,6 +45,30 @@ RUN apt update && apt install -y \
 	&& apt autoremove --purge -y \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
 
+# Add vscode user
+RUN groupadd -r vscode \
+	&& useradd -rs /bin/bash -m -g vscode -u 1001 vscode \
+	&& echo "vscode:vscode" | chpasswd \
+	&& echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode
+
+ARG PROJECT_NAME
+ENV PROJECT_NAME=$PROJECT_NAME
+RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg is required" && exit 1) \
+    && mkdir -p /workspace/$PROJECT_NAME \
+	&& chown vscode:vscode /workspace /workspace/$PROJECT_NAME
+
+# Install Cursor and Claude agents
+USER vscode
+RUN curl -fsSL https://cursor.com/install | bash
+RUN curl -fsSL https://claude.ai/install.sh | bash
+USER root
+
+# Stash agent dirs so post-create can restore into mounted home when missing
+RUN mkdir -p /var/agent-install \
+	&& cp -a /home/vscode/.local /home/vscode/.claude /var/agent-install/ \
+	&& (cp -a /home/vscode/.claude.json /var/agent-install/ 2>/dev/null || true) \
+	&& rm -rf /home/vscode/.local /home/vscode/.claude /home/vscode/.claude.json /home/vscode/.claude.json.backup.* 2>/dev/null || true
+
 # GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
 	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
@@ -128,30 +152,6 @@ RUN mkdir -p /var/bepinex \
 
 # Switch back to dialog for user's use of apt
 ENV DEBIAN_FRONTEND=dialog
-
-# Add vscode user
-RUN groupadd -r vscode \
-	&& useradd -rs /bin/bash -m -g vscode -u 1001 vscode \
-	&& echo "vscode:vscode" | chpasswd \
-	&& echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode
-
-ARG PROJECT_NAME
-ENV PROJECT_NAME=$PROJECT_NAME
-RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg is required" && exit 1) \
-    && mkdir -p /workspace/$PROJECT_NAME \
-	&& chown vscode:vscode /workspace /workspace/$PROJECT_NAME
-
-# Install Cursor and Claude agents
-USER vscode
-RUN curl -fsSL https://cursor.com/install | bash
-RUN curl -fsSL https://claude.ai/install.sh | bash
-USER root
-
-# Stash agent dirs so post-create can restore into mounted home when missing
-RUN mkdir -p /var/agent-install \
-	&& cp -a /home/vscode/.local /home/vscode/.claude /var/agent-install/ \
-	&& (cp -a /home/vscode/.claude.json /var/agent-install/ 2>/dev/null || true) \
-	&& rm -rf /home/vscode/.local /home/vscode/.claude /home/vscode/.claude.json /home/vscode/.claude.json.backup.* 2>/dev/null || true
 
 COPY .devcontainer/post-*.sh /var/
 COPY .devcontainer/.bashrc-root /root/.bashrc

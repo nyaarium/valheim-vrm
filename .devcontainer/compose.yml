@@ -10,6 +10,7 @@ services:
     volumes:
       # Workspace
       - ..:/workspace/valheim-vrm:cached
+      - /mnt/s/Steam/steamapps/common/Valheim:/mnt/valheim:cached
       # Home
       - ../volumes/home:/home/vscode:cached
       # Additional scripts

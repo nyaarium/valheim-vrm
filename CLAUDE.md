@@ -82,9 +82,9 @@ The mod is built around several key components:
 ## Key Paths
 
 ```
-ValheimVRM-source/
+valheim-vrm/
 ├── Libs/                    # Some required Unity DLLs to build the mod
-├── ValheimVRM/              # Main source code
+├── src/                     # Main source code
 │   ├── MainPlugin.cs        # BepInEx entry point
 │   ├── VRM.cs               # VRM import/management
 │   ├── VrmManager.cs        # Central VRM registry
@@ -95,6 +95,7 @@ ValheimVRM-source/
 ├── Assets/                  # Shader bundles and resources
 ├── build.bat                # Batch file to build the mod
 ├── build.sh                 # Bash file to build the mod
+├── ValheimVRM.csproj        # C# project file
 └── [Other files]
 ```
 
