@@ -132,15 +132,15 @@
 		</ItemGroup>
 		<Delete Files="@(OldZipFiles)" ContinueOnError="true" />
 
-		<!-- Delete old files from BepInEx plugins directory (Windows or Linux when Valheim root exists) -->
-		<ItemGroup Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') ">
+		<!-- Delete old files from BepInEx plugins directory (only when plugin folder exists: update existing install) -->
+		<ItemGroup Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetFileName)" />
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/UniVRM.shaders" />
 
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetName).pdb" />
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetFileName).mdb" />
 		</ItemGroup>
-		<Delete Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') " Files="@(OldInstallFiles)" ContinueOnError="true" />
+		<Delete Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " Files="@(OldInstallFiles)" ContinueOnError="true" />
 
 		<!-- Copy files -->
 		<ItemGroup>
@@ -174,25 +174,25 @@
 		<!-- DEBUG BUILD STUFF -->
 		<Exec Condition=" '$(Configuration)' == 'Debug' " Command="&quot;$(Pdb2MdbPath)&quot; &quot;$(TargetPath)&quot;" />
 
-		<!-- Copy debug files to local Valheim installation (Windows or Linux when Valheim root exists) -->
-		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') ">
+		<!-- Copy debug files to local Valheim installation (only when plugin folder exists) -->
+		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<DebugFiles Include="$(TargetPath)" />
 			<DebugFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 
 			<DebugFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
 			<DebugFiles Include="$(TargetDir)$(TargetFileName).mdb" Condition="Exists('$(TargetDir)$(TargetFileName).mdb')" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') " SourceFiles="@(DebugFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(DebugFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
 
 
 		<!-- RELEASE BUILD STUFF -->
 
-		<!-- Copy release files to local Valheim installation (Windows or Linux when Valheim root exists) -->
-		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') ">
+		<!-- Copy release files to local Valheim installation (only when plugin folder exists) -->
+		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<ReleaseFiles Include="$(TargetPath)" />
 			<ReleaseFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
 
 		<!-- Clean release directory -->
 		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(FINAL_RELEASE)" ContinueOnError="true" />
