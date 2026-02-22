@@ -12,7 +12,7 @@ set "OUT_DLL=%PROJECT_DIR%\bin\Release\net471\ValheimVRM.dll"
 cd /d "%PROJECT_DIR%"
 
 :: Build the project
-dotnet build --configuration Release
+dotnet build -c Release
 if errorlevel 1 (
     exit /b 1
 )

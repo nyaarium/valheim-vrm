@@ -13,7 +13,7 @@ OUT_DLL="$PROJECT_DIR/bin/Release/net471/ValheimVRM.dll"
 
 cd "$PROJECT_DIR"
 
-dotnet build --configuration Release
+dotnet build -c Release
 
 # Extract version info
 VERSION=$(grep -oP 'PluginVersion = "([^"]+)"' VersionInfo.g.cs | cut -d'"' -f2)
