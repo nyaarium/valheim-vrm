@@ -1,0 +1,13 @@
+{
+	"extraKnownMarketplaces": {
+		"nyaaskills": {
+			"source": {
+				"source": "github",
+				"repo": "atelier-nyaarium/nyaaskills"
+			}
+		}
+	},
+	"enabledPlugins": {
+		"nyaaskills@nyaaskills": true
+	}
+}
