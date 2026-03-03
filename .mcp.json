@@ -2,11 +2,22 @@
 	"mcpServers": {
 		"agent-team-bridge": {
 			"command": "node",
-			"args": ["/agent-team-bridge/mcp/server.js"],
+			"args": [
+				"/agent-team-bridge/mcp/server.js"
+			],
 			"env": {
+				"TEAM_NAME": "valheim-vrm",
 				"BRIDGE_ROUTER_URL": "http://agent-team-bridge:5678",
-				"BRIDGE_AGENT_TYPE": "claude"
+				"AGENT_TYPE": "claude",
+				"MODEL_SIMPLE": "auto",
+				"MODEL_STANDARD": "sonnet",
+				"MODEL_COMPLEX": "opus"
 			}
+		},
+		"nyaascripts": {
+			"command": "~/scripts/nyaascripts",
+			"args": [],
+			"env": {}
 		}
 	}
 }
