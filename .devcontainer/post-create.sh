@@ -4,7 +4,7 @@
 
 set -e
 
-# Restore Cursor/Claude agent install from image into mounted home when missing
+# Restore Cursor/Claude/Copilot agent installs from image into mounted home when missing
 if [ -d /var/agent-install/.local ]; then
 	if [ ! -d /home/vscode/.local ]; then
 		cp -a /var/agent-install/.local /home/vscode/.local
@@ -18,11 +18,9 @@ fi
 if [ -d /var/agent-install/.claude ] && [ ! -d /home/vscode/.claude ]; then
 	cp -a /var/agent-install/.claude /home/vscode/.claude
 fi
-if [ -f /var/agent-install/.claude.json ] && [ ! -f /home/vscode/.claude.json ]; then
-	cp -a /var/agent-install/.claude.json /home/vscode/.claude.json
-fi
-[ -d /home/vscode/.local ] && chown -R vscode:vscode /home/vscode/.local
-[ -d /home/vscode/.claude ] && chown -R vscode:vscode /home/vscode/.claude
-[ -f /home/vscode/.claude.json ] && chown vscode:vscode /home/vscode/.claude.json
+[ -d /home/vscode/.local ] && chown -R vscode:vscode /home/vscode/.local || true
+[ -d /home/vscode/.claude ] && chown -R vscode:vscode /home/vscode/.claude || true
+[ -d /home/vscode/.cursor ] && chown -R vscode:vscode /home/vscode/.cursor || true
+[ -d /home/vscode/.vscode ] && chown -R vscode:vscode /home/vscode/.vscode || true
 
 sudo chown vscode:vscode /workspace

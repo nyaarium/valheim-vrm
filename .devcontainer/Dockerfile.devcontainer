@@ -57,17 +57,17 @@ RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg
     && mkdir -p /workspace/$PROJECT_NAME \
 	&& chown vscode:vscode /workspace /workspace/$PROJECT_NAME
 
-# Install Cursor and Claude agents
+# Install Cursor, Claude, and Copilot agents
 USER vscode
 RUN curl -fsSL https://cursor.com/install | bash
 RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN curl -fsSL https://gh.io/copilot-install | bash
 USER root
 
 # Stash agent dirs so post-create can restore into mounted home when missing
 RUN mkdir -p /var/agent-install \
 	&& cp -a /home/vscode/.local /home/vscode/.claude /var/agent-install/ \
-	&& (cp -a /home/vscode/.claude.json /var/agent-install/ 2>/dev/null || true) \
-	&& rm -rf /home/vscode/.local /home/vscode/.claude /home/vscode/.claude.json /home/vscode/.claude.json.backup.* 2>/dev/null || true
+	&& rm -rf /home/vscode/.local /home/vscode/.claude
 
 # GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
