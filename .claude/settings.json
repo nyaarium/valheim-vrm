@@ -1,22 +1,22 @@
 {
-	"extraKnownMarketplaces": {
-		"agent-team-bridge": {
-			"source": {
-				"source": "github",
-				"repo": "atelier-nyaarium/agent-team-bridge"
-			},
-			"autoUpdate": true
-		},
-		"nyaaskills": {
-			"source": {
-				"source": "github",
-				"repo": "atelier-nyaarium/nyaaskills"
-			},
-			"autoUpdate": true
-		}
-	},
-	"enabledPlugins": {
-		"agent-team-bridge@agent-team-bridge": true,
-		"nyaaskills@nyaaskills": true
-	}
+  "enabledPlugins": {
+    "agent-team-bridge@agent-team-bridge": true,
+    "nyaaskills@nyaaskills": true
+  },
+  "extraKnownMarketplaces": {
+    "agent-team-bridge": {
+      "source": {
+        "source": "github",
+        "repo": "atelier-nyaarium/agent-team-bridge"
+      },
+      "autoUpdate": true
+    },
+    "nyaaskills": {
+      "source": {
+        "source": "github",
+        "repo": "atelier-nyaarium/nyaaskills"
+      },
+      "autoUpdate": true
+    }
+  }
 }
