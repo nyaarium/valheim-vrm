@@ -57,17 +57,13 @@ RUN test -n "$PROJECT_NAME" || (echo "Docker build error: PROJECT_NAME build arg
     && mkdir -p /workspace/$PROJECT_NAME \
 	&& chown vscode:vscode /workspace /workspace/$PROJECT_NAME
 
-# Install Cursor, Claude, and Copilot agents
+# Install Cursor, Claude, and Copilot agents (into agent-install stash)
+ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 USER vscode
 RUN curl -fsSL https://cursor.com/install | bash
 RUN curl -fsSL https://claude.ai/install.sh | bash
 RUN curl -fsSL https://gh.io/copilot-install | bash
 USER root
-
-# Stash agent dirs so post-create can restore into mounted home when missing
-RUN mkdir -p /var/agent-install \
-	&& cp -a /home/vscode/.local /home/vscode/.claude /var/agent-install/ \
-	&& rm -rf /home/vscode/.local /home/vscode/.claude
 
 # GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
@@ -86,6 +82,15 @@ RUN NODE_MAJOR=24 \
 	&& corepack prepare yarn@stable --activate \
 	&& rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/keyrings/nodesource.gpg \
 	&& apt clean && rm -rf /var/lib/apt/lists/*
+
+# Bun (into agent-install stash)
+USER vscode
+RUN curl -fsSL https://bun.sh/install | bash
+USER root
+
+# Stash agent installs for devcontainer compatibility
+RUN mkdir -p /var/agent-install \
+	&& cp -a /home/vscode/.local /home/vscode/.claude /home/vscode/.bun /var/agent-install/
 
 
 ############################
@@ -157,6 +162,5 @@ COPY .devcontainer/post-*.sh /var/
 COPY .devcontainer/.bashrc-root /root/.bashrc
 
 # Agent Team Bridge
-ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 RUN git clone --depth 1 https://github.com/atelier-nyaarium/agent-team-bridge.git /agent-team-bridge \
     && cd /agent-team-bridge/mcp && npm i --silent
