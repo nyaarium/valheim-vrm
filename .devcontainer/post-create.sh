@@ -18,6 +18,10 @@ fi
 if [ -d /var/agent-install/.claude ] && [ ! -d /home/vscode/.claude ]; then
 	cp -a /var/agent-install/.claude /home/vscode/.claude
 fi
+if [ -d /var/agent-install/.bun ] && [ ! -d /home/vscode/.bun ]; then
+	cp -a /var/agent-install/.bun /home/vscode/.bun
+fi
+[ -d /home/vscode/.bun ] && chown -R vscode:vscode /home/vscode/.bun || true
 [ -d /home/vscode/.local ] && chown -R vscode:vscode /home/vscode/.local || true
 [ -d /home/vscode/.claude ] && chown -R vscode:vscode /home/vscode/.claude || true
 [ -d /home/vscode/.cursor ] && chown -R vscode:vscode /home/vscode/.cursor || true

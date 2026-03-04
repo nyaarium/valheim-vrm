@@ -63,6 +63,8 @@ namespace ValheimVRM
 			var sun = Shader.GetGlobalColor(_SunColor);
 			var amb = Shader.GetGlobalColor(_AmbientColor);
 			var sunAmb = sun + amb;
+
+			// Normalize brightness: prevents blown-out whites while preserving color ratios.
 			if (sunAmb.maxColorComponent > 0.7f) sunAmb /= 0.3f + sunAmb.maxColorComponent;
 
 			foreach (var matColor in matColors)

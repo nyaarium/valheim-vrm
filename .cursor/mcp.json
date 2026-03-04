@@ -13,7 +13,7 @@
 			}
 		},
 		"nyaascripts": {
-			"command": "~/scripts/nyaascripts",
+			"command": "/home/vscode/scripts/nyaascripts",
 			"args": [],
 			"env": {}
 		}

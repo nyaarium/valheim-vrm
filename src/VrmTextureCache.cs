@@ -16,48 +16,29 @@ namespace ValheimVRM
 	{
 		#region Core Data Structures
 
-		/// <summary>
-		/// Primary cache: Texture cache (keyed by content hash)
-		/// </summary>
 		private static Dictionary<TextureCacheKey, Texture2D> TextureCache = new Dictionary<TextureCacheKey, Texture2D>();
 
-		/// <summary>
-		/// Texture info cache (keyed by content hash)
-		/// </summary>
+		// Stores width/height/format metadata for each cached texture, used for logging.
 		private static Dictionary<TextureCacheKey, TextureInfo> TextureInfoCache = new Dictionary<TextureCacheKey, TextureInfo>();
 
-		/// <summary>
-		/// VRM lifecycle tracking
-		/// </summary>
+		// Tracks active VRMs by name, each holding their hash and the set of texture keys they use.
 		private static Dictionary<string, VrmState> VrmStates = new Dictionary<string, VrmState>();
 
-		/// <summary>
-		/// Instance ID to cache key mapping (for Unity texture lookup)
-		/// </summary>
+		// Maps Unity instance IDs to cache keys so existing Texture2D objects can be looked up by identity.
 		private static Dictionary<int, TextureCacheKey> InstanceToCacheKey = new Dictionary<int, TextureCacheKey>();
 
-		/// <summary>
-		/// Texture usage tracking (cache key → set of VRMs using it)
-		/// </summary>
+		// Tracks which VRMs reference each texture, used to determine when a texture is safe to evict.
 		private static Dictionary<TextureCacheKey, HashSet<string>> TextureToVrms = new Dictionary<TextureCacheKey, HashSet<string>>();
 
-		/// <summary>
-		/// Thread safety lock
-		/// </summary>
 		private static readonly object CacheLock = new object();
 
-		/// <summary>
-		/// Cache for computed hashes to avoid recomputation
-		/// </summary>
+		// Secondary index by instance ID to avoid recomputing SHA256 on repeated lookups of the same texture.
 		private static Dictionary<int, TextureCacheKey> ComputedHashes = new Dictionary<int, TextureCacheKey>();
 
 		#endregion
 
 		#region Data Structures
 
-		/// <summary>
-		/// Key for texture cache based on content hash
-		/// </summary>
 		public struct TextureCacheKey
 		{
 			public string ContentHash; // `{color-space}|{length}|{sha256}`
@@ -83,9 +64,6 @@ namespace ValheimVRM
 			}
 		}
 
-		/// <summary>
-		/// Texture information for debugging and logging
-		/// </summary>
 		public class TextureInfo
 		{
 			public int Width;
@@ -109,9 +87,6 @@ namespace ValheimVRM
 			}
 		}
 
-		/// <summary>
-		/// VRM state tracking
-		/// </summary>
 		public class VrmState
 		{
 			public byte[] VrmHash;           // sha256 of VRM source bytes
@@ -144,13 +119,11 @@ namespace ValheimVRM
 			{
 				try
 				{
-					// Generate content hash and include color space qualifier to avoid mixing linear/sRGB instances
 					var baseHash = GenerateContentHash(imageData);
 					var contentHash = $"{(linear ? "linear" : "srgb")}|{baseHash}";
 					var rawKey = new TextureCacheKey(contentHash);
 
 
-					// Check if already cached
 					if (TextureCache.TryGetValue(rawKey, out var existingTexture))
 					{
 						TextureInfoCache.TryGetValue(rawKey, out var existingInfo);
@@ -158,7 +131,6 @@ namespace ValheimVRM
 						return (existingTexture, rawKey);
 					}
 
-					// Create new texture
 					var texture = Utils.TryLoadImageWithUnity(imageData, linear);
 					if (texture == null)
 					{
@@ -166,7 +138,6 @@ namespace ValheimVRM
 						return (null, default);
 					}
 
-					// Cache the texture and info
 					TextureCache[rawKey] = texture;
 					var textureInfo = new TextureInfo(
 						texture.width,
@@ -215,24 +186,20 @@ namespace ValheimVRM
 			{
 				try
 				{
-					// Ensure VRM state exists
 					if (!VrmStates.TryGetValue(vrmName, out var vrmState))
 					{
 						Debug.LogError($"[VrmTextureCache] 💽 LinkTextureToVrm: VRM state not found for {vrmName}");
 						return false;
 					}
 
-					// Verify hash matches stored state
 					if (!vrmState.VrmHash.SequenceEqual(vrmHash))
 					{
 						Debug.LogWarning($"[VrmTextureCache] 💽 LinkTextureToVrm: Provided hash doesn't match stored for {vrmName}");
 						return false;
 					}
 
-					// Add raw key to VRM state
 					vrmState.TextureCacheKeys.Add(rawKey);
 
-					// Track texture usage
 					if (!TextureToVrms.TryGetValue(rawKey, out var vrmsUsingTexture))
 					{
 						vrmsUsingTexture = new HashSet<string>();
@@ -268,13 +235,11 @@ namespace ValheimVRM
 				{
 					var instanceId = texture.GetInstanceID();
 
-					// Check computed hashes cache first
 					if (ComputedHashes.TryGetValue(instanceId, out var cachedKey))
 					{
 						return cachedKey;
 					}
 
-					// Check instance mapping
 					if (InstanceToCacheKey.TryGetValue(instanceId, out var mappedKey))
 					{
 						ComputedHashes[instanceId] = mappedKey;
@@ -291,9 +256,6 @@ namespace ValheimVRM
 			}
 		}
 
-		/// <summary>
-		/// Record instance ID mapping for texture lookup
-		/// </summary>
 		public static void RecordInstanceMapping(int instanceId, TextureCacheKey rawKey)
 		{
 			lock (CacheLock)
@@ -301,7 +263,7 @@ namespace ValheimVRM
 				try
 				{
 					InstanceToCacheKey[instanceId] = rawKey;
-					ComputedHashes[instanceId] = rawKey; // Also cache in computed hashes
+					ComputedHashes[instanceId] = rawKey;
 				}
 				catch (Exception ex)
 				{
@@ -365,7 +327,7 @@ namespace ValheimVRM
 
 			if (vrmHash == null)
 			{
-				Debug.LogWarning("[VrmTextureCache] 💽 UnregisterVrm: vrmHash is required but null—skipping");
+				Debug.LogWarning("[VrmTextureCache] 💽 UnregisterVrm: vrmHash is required but was null. Skipping.");
 				return false;
 			}
 
@@ -379,14 +341,12 @@ namespace ValheimVRM
 						return false;
 					}
 
-					// Verify hash matches
 					if (!vrmState.VrmHash.SequenceEqual(vrmHash))
 					{
-						Debug.LogWarning($"[VrmTextureCache] 💽 UnregisterVrm: Provided hash doesn't match stored for {vrmName}—skipping");
+						Debug.LogWarning($"[VrmTextureCache] 💽 UnregisterVrm: Provided hash does not match the stored hash for {vrmName}. Skipping.");
 						return false;
 					}
 
-					// Remove VRM from texture usage tracking
 					foreach (var rawKey in vrmState.TextureCacheKeys.ToArray()) // ToArray for modification safety
 					{
 						if (TextureToVrms.TryGetValue(rawKey, out var vrmsUsingTexture))
@@ -398,7 +358,6 @@ namespace ValheimVRM
 						}
 					}
 
-					// Remove VRM state
 					VrmStates.Remove(vrmName);
 					Debug.Log($"[VrmTextureCache] 💽 UnregisterVrm: Disposed state for {vrmName}");
 					return true;
@@ -412,7 +371,8 @@ namespace ValheimVRM
 		}
 
 		/// <summary>
-		/// Cleanup unused textures
+		/// Destroys Texture2D objects for any cache entries no longer referenced by any VRM.
+		/// Call this after unregistering a VRM to free GPU memory.
 		/// </summary>
 		public static void CleanupUnusedTextures()
 		{
@@ -460,9 +420,6 @@ namespace ValheimVRM
 
 		#region Utility Methods
 
-		/// <summary>
-		/// Generate content hash for image data
-		/// </summary>
 		private static string GenerateContentHash(byte[] imageData)
 		{
 			try
