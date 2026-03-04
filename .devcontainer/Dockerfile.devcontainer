@@ -160,7 +160,3 @@ ENV DEBIAN_FRONTEND=dialog
 
 COPY .devcontainer/post-*.sh /var/
 COPY .devcontainer/.bashrc-root /root/.bashrc
-
-# Agent Team Bridge
-RUN git clone --depth 1 https://github.com/atelier-nyaarium/agent-team-bridge.git /agent-team-bridge \
-    && cd /agent-team-bridge/mcp && npm i --silent
