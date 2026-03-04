@@ -15,7 +15,6 @@ namespace ValheimVRM
         public void Setup(Transform vrmEye)
         {
             this.vrmEye = vrmEye;
-            // Add a null check for GetComponent<Player>().m_eye
             Player player = GetComponent<Player>();
             if (player != null)
             {
@@ -29,7 +28,6 @@ namespace ValheimVRM
 
         void LateUpdate()
         {
-            // Check if orgEye is not null before accessing its position
             if (orgEye != null)
             {
                 var pos = this.orgEye.position;
@@ -38,7 +36,6 @@ namespace ValheimVRM
             }
             else
             {
-                // Handle the case when orgEye is null
                 Debug.LogError("orgEye is null. Make sure Setup method is called and Player component is available.");
             }
         }

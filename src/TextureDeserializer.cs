@@ -30,7 +30,6 @@ namespace ValheimVRM
 
             if (isKnownImage)
             {
-                // Integrate VrmTextureCache: Use cache first for deduplication
                 var linear = textureInfo.ColorSpace == UniGLTF.ColorSpace.Linear;
                 var (cachedTexture, rawKey) = VrmTextureCache.GetOrCacheTexture(textureInfo.ImageData, linear);
                 if (cachedTexture != null)
@@ -40,15 +39,13 @@ namespace ValheimVRM
                 }
                 else
                 {
-                    // Fallback to original Unity load
                     texture = Utils.TryLoadImageWithUnity(textureInfo.ImageData, linear);
                     if (texture != null)
                     {
-                        // Cache the newly loaded texture
                         var (newCached, newKey) = VrmTextureCache.GetOrCacheTexture(textureInfo.ImageData, linear);
                         if (newCached != null)
                         {
-                            texture = newCached; // Replace with cached version
+                            texture = newCached;
                             VrmTextureCache.RecordInstanceMapping(texture.GetInstanceID(), newKey);
                         }
                     }
@@ -65,10 +62,6 @@ namespace ValheimVRM
                     texture.wrapModeV = textureInfo.WrapModeV;
                     texture.filterMode = textureInfo.FilterMode;
                     texture.anisoLevel = 4;
-
-                    var __sw = System.Diagnostics.Stopwatch.StartNew();
-                    var __sha = System.Security.Cryptography.SHA256.Create().ComputeHash(textureInfo.ImageData);
-                    __sw.Stop();
                 }
             }
 
@@ -120,7 +113,6 @@ namespace ValheimVRM
 
         private Texture2D CreateFallbackTexture()
         {
-            // Create a simple 1x1 magenta texture as fallback (consistent with Async version)
             var fallbackTexture = new Texture2D(1, 1);
             fallbackTexture.SetPixel(0, 0, Color.magenta);
             fallbackTexture.Apply();

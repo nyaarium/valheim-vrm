@@ -49,8 +49,6 @@ namespace ValheimVRM
 				vrmPose.Dispose();
 		}
 
-		//private static int prevHash = 0;
-
 		const int FirstTime = -161139084;
 		const int Usually = 229373857;  // standing idle
 		const int FirstRise = -1536343465; // stand up upon login
@@ -141,7 +139,6 @@ namespace ValheimVRM
 				vrmAnim.transform.localPosition = Vector3.zero;
 				var verticalOffset = Vector3.up * settings.ModelOffsetY;
 
-				// For all Unity avatar bones
 				for (var i = 0; i < 55; i++)
 				{
 					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
@@ -166,12 +163,6 @@ namespace ValheimVRM
 			var nextState = orgAnim.GetNextAnimatorStateInfo(0);
 			var nextStateHash = nextState.shortNameHash;
 
-			//if (newStateHash != prevHash)
-			//{
-			//	prevHash = newStateHash;
-			//	Debug.Log(orgAnim.GetCurrentAnimatorClipInfo(0)[0].clip.name + ": " + newStateHash);
-			//}
-
 			var vrmHip = vrmAnim.GetBoneTransform(HumanBodyBones.Hips);
 			var orgHip = orgAnim.GetBoneTransform(HumanBodyBones.Hips);
 
@@ -180,7 +171,7 @@ namespace ValheimVRM
 			Vector3 actualAdjustHipPos;
 			float actualInterpSpeed;
 
-			//---------
+			// Phase 1: Calculate current state adjustment
 
 			var curAdjustPos = Vector3.zero;
 
@@ -196,7 +187,7 @@ namespace ValheimVRM
 			Vector3 curOffset = StateHashToOffset(curStateHash, out curInterpSpeed);
 			if (curOffset != Vector3.zero) curAdjustPos += orgHip.transform.rotation * curOffset;
 
-			//---------
+			// Phase 2: Calculate next state adjustment
 
 			var nextAdjustPos = Vector3.zero;
 
@@ -227,7 +218,7 @@ namespace ValheimVRM
 				actualAdjustHipPos = curAdjustPos;
 			}
 
-			//---------
+			// Phase 3: Lerp and apply
 
 			adjustPos = adjustPos.HasValue ? Vector3.Lerp(adjustPos.Value, actualAdjustHipPos, actualInterpSpeed) : curAdjustPos;
 

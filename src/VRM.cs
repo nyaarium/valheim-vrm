@@ -374,7 +374,6 @@ namespace ValheimVRM
 			}
 			yield return null;
 
-			// アニメーション同期
 			var animationSync = vrmModel.GetComponent<VRMAnimationSync>();
 			if (animationSync == null)
 			{
@@ -388,7 +387,6 @@ namespace ValheimVRM
 
 			if (player == null || vrmModel == null) yield break;
 
-			// カメラ位置調整
 			if (settings.FixCameraHeight)
 			{
 				var currentAnimator = player != null ? player.GetComponentInChildren<Animator>() : null;
@@ -411,7 +409,6 @@ namespace ValheimVRM
 
 			if (player == null || vrmModel == null) yield break;
 
-			// MToonの場合環境光の影響をカラーに反映する
 			if (settings.UseMToonShader)
 			{
 				var mToonColorSync = vrmModel.GetComponent<MToonColorSync>() ?? vrmModel.AddComponent<MToonColorSync>();
@@ -419,7 +416,6 @@ namespace ValheimVRM
 			}
 			yield return null;
 
-			// SpringBone設定
 			foreach (var springBone in vrmModel.GetComponentsInChildren<VRMSpringBone>())
 			{
 				springBone.m_stiffnessForce *= settings.SpringBoneStiffness;

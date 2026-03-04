@@ -72,7 +72,6 @@ namespace ValheimVRM
                     harmony.Patch(method,
                         prefix: new HarmonyMethod(typeof(PatchAllUpdateMethods), nameof(GenericPrefix)),
                         postfix: new HarmonyMethod(typeof(PatchAllUpdateMethods), nameof(GenericPostfix)));
-                    //Debug.Log($"Patched {methodName} in {type.FullName}");
                 }
                 catch (Exception ex)
                 {
@@ -98,7 +97,6 @@ namespace ValheimVRM
                 CallingMethod = method
             };
             __state.Stopwatch.Start();
-            // Debug.Log($"Before {method.DeclaringType.FullName}.{method.Name}");
         }
 
         public static void GenericPostfix(GenericPState __state)
@@ -116,7 +114,6 @@ namespace ValheimVRM
             long currentTimestamp = Stopwatch.GetTimestamp();
             methodCallTimestamps[methodName].Add(currentTimestamp);
 
-            // Remove timestamps that are outside the time window
             methodCallTimestamps[methodName].RemoveAll(timestamp => (currentTimestamp - timestamp) / (Stopwatch.Frequency / 1000) > Settings.globalSettings.TimeWindowMs);
 
             if (methodCallTimestamps[methodName].Count > Settings.globalSettings.CallThreshold)

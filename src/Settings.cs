@@ -14,7 +14,10 @@ namespace ValheimVRM
 {
     public static class Settings
     {
-        // We should use precompiled type as a container so we could avoid parsing values repeatedly
+        /// <summary>
+        /// Base class for settings containers. Uses reflection over public fields to load, reset, copy, and serialize settings.
+        /// Subclass this and add public fields for each setting. Fields marked [NonSerialized] are skipped.
+        /// </summary>
         public abstract class Container
         {
             public override string ToString()
@@ -386,7 +389,6 @@ namespace ValheimVRM
 
         public static VrmSettingsContainer GetSettings(string playerName)
         {
-            // if player settings dont exist, load default ones.
             return playerSettings.ContainsKey(playerName) ? playerSettings[playerName] : playerSettings.ContainsKey("___Default") ? playerSettings["___Default"] : null;
         }
 

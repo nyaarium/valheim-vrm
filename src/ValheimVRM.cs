@@ -938,30 +938,6 @@ namespace ValheimVRM
 				}
 			}));
 
-			// var loadTask = VRM.ImportVisualAsync(bytesTask.Result, path, settings.ModelScale);
-			//
-			//
-			// while (!loadTask.IsCompleted)
-			// {
-			// 	yield return new WaitUntil(() => loadTask.IsCompleted);
-			// }
-			//
-			// if (loadTask.IsFaulted)
-			// {
-			// 	Debug.LogError($"Error loading VRM: {loadTask.Exception.Flatten().InnerException}");
-			// 	yield break;
-			// }
-			//
-			//
-			// if (loadTask.Result != null)
-			// {
-			// 	var vrm = CreateVrm(loadTask.Result, player, bytesTask.Result, playerName, isShared);
-			// 	if (vrm != null)
-			// 	{
-			// 		SetVrm(player, vrm, settingsUpdated);
-			// 	}
-			// }
-
 		}
 
 		[HarmonyPatch(typeof(global::VRM.VRMBlendShapeProxy), "OnDestroy")]
