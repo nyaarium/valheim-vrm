@@ -5,6 +5,7 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile.devcontainer
+      pull: true
       args:
         PROJECT_NAME: valheim-vrm
     volumes:
