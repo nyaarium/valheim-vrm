@@ -88,11 +88,6 @@ USER vscode
 RUN curl -fsSL https://bun.sh/install | bash
 USER root
 
-# Stash agent installs for devcontainer compatibility
-RUN mkdir -p /var/agent-install \
-	&& cp -a /home/vscode/.local /home/vscode/.claude /home/vscode/.bun /var/agent-install/
-
-
 ############################
 # .NET SDK
 
@@ -154,6 +149,10 @@ RUN mkdir -p /var/bepinex \
 # TODO: Get UniVRM DLLs
 # I couldn't find a way to extract them from a .unitypackage, so for now they are commited to the repo under Libs/
 
+
+# Stash agent installs for devcontainer compatibility
+RUN mkdir -p /var/agent-install \
+	&& cp -a /home/vscode/.local /home/vscode/.claude /home/vscode/.bun /var/agent-install/
 
 # Switch back to dialog for user's use of apt
 ENV DEBIAN_FRONTEND=dialog
