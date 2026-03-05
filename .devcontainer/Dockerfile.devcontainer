@@ -1,4 +1,4 @@
-FROM ghcr.io/nyaarium/agent-default:latest
+FROM ghcr.io/atelier-nyaarium/workspace:latest
 
 ARG PROJECT_NAME
 ENV PROJECT_NAME=$PROJECT_NAME
