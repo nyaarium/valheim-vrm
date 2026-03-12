@@ -19,8 +19,7 @@
 				"christian-kohler.npm-intellisense",
 				"codeandstuff.package-json-upgrade",
 				"bierner.markdown-mermaid",
-				"dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode",
+				"biomejs.biome",
 				"github.vscode-github-actions",
 				"github.vscode-pull-request-github",
 				"mechatroner.rainbow-csv",
@@ -33,25 +32,25 @@
 			],
 			"settings": {
 				"[html]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[javascript]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[javascriptreact]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[json]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[jsonc]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[typescript]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[typescriptreact]": {
-					"editor.defaultFormatter": "esbenp.prettier-vscode"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[csharp]": {
 					"editor.defaultFormatter": "anysphere.csharp"
@@ -63,8 +62,8 @@
 				"diffEditor.codeLens": true,
 				"diffEditor.experimental.showMoves": true,
 				"diffEditor.ignoreTrimWhitespace": true,
-				"editor.codeActionsOnSave": { "source.sortImports": "explicit" },
-				"editor.defaultFormatter": "esbenp.prettier-vscode",
+				"editor.codeActionsOnSave": { "source.organizeImports.biome": "explicit" },
+				"editor.defaultFormatter": "biomejs.biome",
 				"editor.formatOnSave": true,
 				"editor.insertSpaces": false,
 				"extensions.ignoreRecommendations": true,
@@ -83,9 +82,7 @@
 				"javascript.preferences.importModuleSpecifier": "non-relative",
 				"javascript.updateImportsOnFileMove.enabled": "always",
 				"js/ts.implicitProjectConfig.target": "ESNext",
-				"prettier.quoteProps": "consistent",
-				"prettier.useEditorConfig": false,
-				"scm.diffDecorationsIgnoreTrimWhitespace": "true",
+					"scm.diffDecorationsIgnoreTrimWhitespace": "true",
 				"typescript.preferences.importModuleSpecifier": "non-relative",
 				"typescript.updateImportsOnFileMove.enabled": "always"
 			}
