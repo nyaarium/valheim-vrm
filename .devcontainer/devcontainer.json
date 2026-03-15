@@ -11,9 +11,6 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"anysphere.pyright",
-				"Anthropic.claude-code",
-				"antfu.browse-lite",
 				"anysphere.csharp",
 				"BlueGlassBlock.better-json5",
 				"christian-kohler.npm-intellisense",
@@ -55,8 +52,6 @@
 				"[csharp]": {
 					"editor.defaultFormatter": "anysphere.csharp"
 				},
-				"autoimport.doubleQuotes": true,
-				"autoimport.filesToScan": "**/*.{js,jsx,ts,tsx}",
 				"cursor.cmdk.useThemedDiffBackground": true,
 				"cursor.terminal.usePreviewBox": true,
 				"diffEditor.codeLens": true,
@@ -82,7 +77,7 @@
 				"javascript.preferences.importModuleSpecifier": "non-relative",
 				"javascript.updateImportsOnFileMove.enabled": "always",
 				"js/ts.implicitProjectConfig.target": "ESNext",
-					"scm.diffDecorationsIgnoreTrimWhitespace": "true",
+				"scm.diffDecorationsIgnoreTrimWhitespace": "true",
 				"typescript.preferences.importModuleSpecifier": "non-relative",
 				"typescript.updateImportsOnFileMove.enabled": "always"
 			}
