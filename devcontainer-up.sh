@@ -22,5 +22,3 @@ devcontainer build --workspace-folder "$SCRIPT_DIR"
 echo "Starting devcontainer for ${PROJECT_NAME}..."
 devcontainer up --workspace-folder "$SCRIPT_DIR"
 
-echo "Attaching shell..."
-exec devcontainer exec --workspace-folder "$SCRIPT_DIR" bash
