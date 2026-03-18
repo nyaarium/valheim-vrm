@@ -11,6 +11,7 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				"AlaArab.phren-vscode",
 				"anysphere.csharp",
 				"BlueGlassBlock.better-json5",
 				"christian-kohler.npm-intellisense",

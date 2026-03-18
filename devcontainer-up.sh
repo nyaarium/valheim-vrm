@@ -22,3 +22,6 @@ devcontainer build --workspace-folder "$SCRIPT_DIR"
 echo "Starting devcontainer for ${PROJECT_NAME}..."
 devcontainer up --workspace-folder "$SCRIPT_DIR"
 
+echo "Running lifecycle commands..."
+devcontainer run-user-commands --workspace-folder "$SCRIPT_DIR"
+
