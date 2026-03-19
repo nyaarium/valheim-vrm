@@ -1,17 +1,5 @@
 {
 	"mcpServers": {
-		"agent-team-bridge": {
-			"command": "/home/vscode/agent-team-bridge/build/agent-team-bridge",
-			"args": [],
-			"env": {
-				"TEAM_NAME": "valheim-vrm",
-				"BRIDGE_ROUTER_URL": "http://agent-team-bridge:5678",
-				"AGENT_TYPE": "claude",
-				"MODEL_SIMPLE": "auto",
-				"MODEL_STANDARD": "sonnet",
-				"MODEL_COMPLEX": "opus"
-			}
-		},
 		"nyaascripts": {
 			"command": "/home/vscode/scripts/nyaascripts",
 			"args": [],

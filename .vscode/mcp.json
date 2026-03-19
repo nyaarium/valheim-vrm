@@ -1,5 +1,5 @@
 {
-	"mcpServers": {
+	"servers": {
 		"nyaascripts": {
 			"command": "/home/vscode/scripts/nyaascripts",
 			"args": [],
