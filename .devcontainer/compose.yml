@@ -17,7 +17,9 @@ services:
       # Additional scripts
       - ~/scripts:/home/vscode/scripts:ro
     networks:
-      - agent-team-bridge-network
+      agent-team-bridge-network:
+        aliases:
+          - valheim-vrm
 networks:
   agent-team-bridge-network:
     name: agent-team-bridge
