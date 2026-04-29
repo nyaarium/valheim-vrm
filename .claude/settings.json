@@ -1,22 +1,17 @@
 {
   "enabledPlugins": {
-    "agent-team-bridge@agent-team-bridge": true,
-    "nyaaskills@nyaaskills": true
+    "switchboard@atelier-nyaarium": true
   },
   "extraKnownMarketplaces": {
-    "agent-team-bridge": {
+    "atelier-nyaarium": {
       "source": {
         "source": "github",
-        "repo": "atelier-nyaarium/agent-team-bridge"
-      },
-      "autoUpdate": true
-    },
-    "nyaaskills": {
-      "source": {
-        "source": "github",
-        "repo": "atelier-nyaarium/nyaaskills"
+        "repo": "atelier-nyaarium/claude-marketplace"
       },
       "autoUpdate": true
     }
-  }
+  },
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true
 }
