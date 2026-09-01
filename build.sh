@@ -20,7 +20,7 @@ CHECKSUM=$(sha256sum "$ROOT/release/$FILENAME" | cut -d' ' -f1)
 # Write info to files
 echo -n "$VERSION" > "$ROOT/release/version.txt"
 echo -n "$CHECKSUM" > "$ROOT/release/sha256.txt"
-cp "$ROOT/release-notes.md" "$ROOT/release/body.md"
+cp "$ROOT/Release.md" "$ROOT/release/body.md"
 
 echo "Release: $FILENAME"
 echo "Version: $VERSION"
