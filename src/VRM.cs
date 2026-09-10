@@ -10,7 +10,6 @@ using UniGLTF;
 using UnityEngine;
 using VRM;
 using UniVRM10;
-using VRMShaders;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
@@ -321,6 +320,7 @@ namespace ValheimVRM
 			if (VisualModel == null) yield break;
 			var vrmModel = Object.Instantiate(VisualModel);
 			if (vrmModel == null) yield break;
+			PrepareVrm10Clone(vrmModel);
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";
 			vrmModel.SetActive(true);
@@ -431,6 +431,23 @@ namespace ValheimVRM
 			{
 				controller.ReloadSpringBones();
 			}
+		}
+
+		private static void PrepareVrm10Clone(GameObject model)
+		{
+			var vrm10 = model.GetComponent<Vrm10Instance>();
+			if (vrm10 == null) return;
+
+			var gltf = model.GetComponent<RuntimeGltfInstance>();
+			if (gltf != null && gltf.InitialTransformStates.Count == 0 && gltf.RuntimeResources.Count == 0)
+			{
+				// Instantiate does not copy the importer's pose dictionary or resource ownership.
+				// Remove the empty component so UniVRM captures the clone's own bind pose.
+				Object.DestroyImmediate(gltf);
+			}
+
+			// Constraints must capture this pose before animation changes the transforms.
+			_ = vrm10.Runtime;
 		}
 	}
 }

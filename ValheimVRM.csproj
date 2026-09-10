@@ -75,23 +75,19 @@
 		<!-- VRM -->
 		<Reference Include="VRM" HintPath="$(LIBS_MANAGED)/VRM.dll" />
 		<Reference Include="VRM10" HintPath="$(LIBS_MANAGED)/VRM10.dll" />
+		<Reference Include="VRM10.MToon10" HintPath="$(LIBS_MANAGED)/VRM10.MToon10.dll" />
 		<Reference Include="VrmLib" HintPath="$(LIBS_MANAGED)/VrmLib.dll" />
-		<Reference Include="VRMShaders.GLTF.IO.Runtime" HintPath="$(LIBS_MANAGED)/VRMShaders.GLTF.IO.Runtime.dll" />
-		<Reference Include="VRMShaders.GLTF.UniUnlit.Runtime" HintPath="$(LIBS_MANAGED)/VRMShaders.GLTF.UniUnlit.Runtime.dll" />
-		<Reference Include="VRMShaders.VRM.IO.Runtime" HintPath="$(LIBS_MANAGED)/VRMShaders.VRM.IO.Runtime.dll" />
-		<Reference Include="VRMShaders.VRM10.Format.Runtime" HintPath="$(LIBS_MANAGED)/VRMShaders.VRM10.Format.Runtime.dll" />
-		<Reference Include="VRMShaders.VRM10.MToon10.Runtime" HintPath="$(LIBS_MANAGED)/VRMShaders.VRM10.MToon10.Runtime.dll" />
 		<Reference Include="MToon" HintPath="$(LIBS_MANAGED)/MToon.dll" />
 		<Reference Include="UniGLTF" HintPath="$(LIBS_MANAGED)/UniGLTF.dll" />
 		<Reference Include="UniGLTF.Utils" HintPath="$(LIBS_MANAGED)/UniGLTF.Utils.dll" />
+		<Reference Include="UniGLTF.UniUnlit" HintPath="$(LIBS_MANAGED)/UniGLTF.UniUnlit.dll" />
 		<Reference Include="UniHumanoid" HintPath="$(LIBS_MANAGED)/UniHumanoid.dll" />
-		<Reference Include="FastSpringBone" HintPath="$(LIBS_MANAGED)/FastSpringBone.dll" />
 		<Reference Include="FastSpringBone10" HintPath="$(LIBS_MANAGED)/FastSpringBone10.dll" />
 		<Reference Include="SpringBoneJobs" HintPath="$(LIBS_MANAGED)/SpringBoneJobs.dll" />
 
-		<!-- Unity Extra -->
-		<Reference Include="Unity.Burst" HintPath="$(LIBS_MANAGED)/Unity.Burst.dll" />
-		<Reference Include="Unity.Mathematics" HintPath="$(LIBS_MANAGED)/Unity.Mathematics.dll" />
+		<!-- Use the game's Unity packages; do not redistribute older copies. -->
+		<Reference Include="Unity.Burst" HintPath="$(VALHEIM_MANAGED)/Unity.Burst.dll" />
+		<Reference Include="Unity.Mathematics" HintPath="$(VALHEIM_MANAGED)/Unity.Mathematics.dll" />
 
 		<!-- Image Stuff -->
 		<Reference Include="AsyncImageLoader" HintPath="$(LIBS_MANAGED)/AsyncImageLoader.Runtime.dll" />
@@ -147,23 +143,15 @@
 			<!-- VRM -->
 			<LibFiles Include="$(LIBS_MANAGED)/VRM.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/VRM10.dll" />
+			<LibFiles Include="$(LIBS_MANAGED)/VRM10.MToon10.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/VrmLib.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/VRMShaders.GLTF.IO.Runtime.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/VRMShaders.GLTF.UniUnlit.Runtime.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/VRMShaders.VRM.IO.Runtime.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/VRMShaders.VRM10.Format.Runtime.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/VRMShaders.VRM10.MToon10.Runtime.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/MToon.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/UniGLTF.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/UniGLTF.Utils.dll" />
+			<LibFiles Include="$(LIBS_MANAGED)/UniGLTF.UniUnlit.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/UniHumanoid.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/FastSpringBone.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/FastSpringBone10.dll" />
 			<LibFiles Include="$(LIBS_MANAGED)/SpringBoneJobs.dll" />
-
-			<!-- Unity Extra -->
-			<LibFiles Include="$(LIBS_MANAGED)/Unity.Burst.dll" />
-			<LibFiles Include="$(LIBS_MANAGED)/Unity.Mathematics.dll" />
 
 			<!-- Image Stuff -->
 			<LibFiles Include="$(LIBS_MANAGED)/AsyncImageLoader.Runtime.dll" />
@@ -221,6 +209,8 @@
 			<ProjectFiles Include="$(ROOT_DIR)/settings_Example.txt.example" />
 			<ProjectFiles Include="$(ROOT_DIR)/global_settings.txt.example" />
 			<ProjectFiles Include="$(ROOT_DIR)/README.md" />
+			<ProjectFiles Include="$(ROOT_DIR)/LICENSE" />
+			<ProjectFiles Include="$(LIBS_MANAGED)/*-LICENSE.txt" />
 		</ItemGroup>
 		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectFiles)" DestinationFolder="$(RELEASE_STAGING)/ValheimVRM" />
 
@@ -228,7 +218,7 @@
 		<!-- Zip for release -->
 
 		<!-- Windows: use PowerShell Compress-Archive -->
-		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' " Command="powershell -NoProfile -NonInteractive -Command &quot;Compress-Archive -Path '$(RELEASE_STAGING)*' -DestinationPath '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' -Force&quot;" />
+		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT' " Command="powershell -NoProfile -NonInteractive -Command &quot;Compress-Archive -Path '$(RELEASE_STAGING)/*' -DestinationPath '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' -Force&quot;" />
 
 		<!-- Linux: use zip -->
 		<Exec Condition=" '$(Configuration)' == 'Release' and '$(OS)' != 'Windows_NT' " Command="cd '$(RELEASE_STAGING)' &amp;&amp; zip -r -9 '$(FINAL_RELEASE)/ValheimVRM-$(Version).zip' ." />

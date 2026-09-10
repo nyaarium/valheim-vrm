@@ -8,7 +8,8 @@ using Object = UnityEngine.Object;
 
 namespace ValheimVRM
 {
-	[DefaultExecutionOrder(int.MaxValue)]
+	// Copy game animation before UniVRM 1.0 updates constraints and spring bones (11000).
+	[DefaultExecutionOrder(10000)]
 	public class VRMAnimationSync : MonoBehaviour
 	{
 		private Animator orgAnim, vrmAnim;
@@ -18,6 +19,9 @@ namespace ValheimVRM
 		private Settings.VrmSettingsContainer settings;
 		private Vector3? adjustPos;
 		private int oldStateHash;
+		private readonly Quaternion[] boneRotationOffsets = new Quaternion[(int)HumanBodyBones.LastBone];
+		private readonly bool[] hasBoneRotationOffset = new bool[(int)HumanBodyBones.LastBone];
+		private HumanBodyBones[] ragdollBones;
 
 		public void Setup(Animator orgAnim, Settings.VrmSettingsContainer settings, bool isRagdoll = false)
 		{
@@ -32,6 +36,54 @@ namespace ValheimVRM
 			this.vrmAnim.stabilizeFeet = orgAnim.stabilizeFeet;
 
 			PoseHandlerCreate(orgAnim, vrmAnim);
+			if (isRagdoll)
+			{
+				PrepareRagdollBones();
+			}
+		}
+
+		private void PrepareRagdollBones()
+		{
+			ragdollBones = Enumerable.Range(0, (int)HumanBodyBones.LastBone)
+				.Select(index => (HumanBodyBones)index)
+				.Where(bone => orgAnim.GetBoneTransform(bone) != null && vrmAnim.GetBoneTransform(bone) != null)
+				.OrderBy(bone => GetBoneDepth(vrmAnim.GetBoneTransform(bone)))
+				.ToArray();
+
+			foreach (var bone in ragdollBones)
+			{
+				int index = (int)bone;
+				if (hasBoneRotationOffset[index]) continue;
+
+				var source = orgAnim.GetBoneTransform(bone);
+				var target = vrmAnim.GetBoneTransform(bone);
+				boneRotationOffsets[index] = Quaternion.Inverse(source.rotation) * target.rotation;
+			}
+		}
+
+		private static int GetBoneDepth(Transform bone)
+		{
+			int depth = 0;
+			while (bone.parent != null)
+			{
+				depth++;
+				bone = bone.parent;
+			}
+			return depth;
+		}
+
+		private void CacheBoneRotationOffsets()
+		{
+			for (int index = 0; index < (int)HumanBodyBones.LastBone; index++)
+			{
+				var bone = (HumanBodyBones)index;
+				var source = orgAnim.GetBoneTransform(bone);
+				var target = vrmAnim.GetBoneTransform(bone);
+				if (source == null || target == null) continue;
+
+				boneRotationOffsets[index] = Quaternion.Inverse(source.rotation) * target.rotation;
+				hasBoneRotationOffset[index] = true;
+			}
 		}
 
 		void PoseHandlerCreate(Animator org, Animator vrm)
@@ -139,16 +191,16 @@ namespace ValheimVRM
 				vrmAnim.transform.localPosition = Vector3.zero;
 				var verticalOffset = Vector3.up * settings.ModelOffsetY;
 
-				for (var i = 0; i < 55; i++)
+				// Physics does not update HumanPoseHandler. Apply rotations parent first,
+				// using the live avatar's bone axes and retaining its own bone lengths.
+				foreach (var bone in ragdollBones)
 				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-					if (orgTrans != null && vrmTrans != null)
-					{
-						vrmTrans.position = orgTrans.position + verticalOffset;
-						vrmTrans.rotation = orgTrans.rotation;
-					}
+					var source = orgAnim.GetBoneTransform(bone);
+					var target = vrmAnim.GetBoneTransform(bone);
+					target.rotation = source.rotation * boneRotationOffsets[(int)bone];
 				}
+				vrmAnim.GetBoneTransform(HumanBodyBones.Hips).position =
+					orgAnim.GetBoneTransform(HumanBodyBones.Hips).position + verticalOffset;
 				return;
 			}
 
@@ -247,6 +299,7 @@ namespace ValheimVRM
 
 			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
 
+			CacheBoneRotationOffsets();
 			oldStateHash = curStateHash;
 		}
 	}
