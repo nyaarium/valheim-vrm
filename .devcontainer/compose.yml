@@ -8,7 +8,15 @@ services:
       pull: true
       args:
         PROJECT_NAME: valheim-vrm
+    environment:
+      SSH_AUTH_SOCK: /tmp/ssh-agent.sock
     volumes:
+      # SSH agent forwarding
+      - type: bind
+        source: /tmp/ssh-agent.sock
+        target: /tmp/ssh-agent.sock
+        bind:
+          create_host_path: false
       # Workspace
       - ..:/workspace/valheim-vrm:cached
       - /mnt/s/Steam/steamapps/common/Valheim:/mnt/valheim:cached
@@ -17,9 +25,10 @@ services:
       # Additional scripts
       - ~/scripts:/home/vscode/scripts:ro
     networks:
+      default:
       switchboard-network:
         aliases:
           - valheim-vrm
 networks:
   switchboard-network:
-    name: switchboard-network
+    name: switchboard

@@ -48,4 +48,4 @@ jobs:
         with:
           name: release
           path: release/*
-          retention-days: 7
+          retention-days: 1
