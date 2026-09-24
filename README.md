@@ -2,6 +2,10 @@
 
 ## Game updated? Found a bug?
 
+For the Valheim 1.0.7 compatibility changes, see the
+[validation notes](docs/valheim-1.0-validation.md) and
+[runtime dependency instructions](Libs/README.md).
+
 **[File an issue on the Issues tab](https://github.com/nyaarium/valheim-vrm/issues?q=is%3Aissue)** with **what the problem is**, and paste in the **error logged in the console**.
 
 I'll _probably_ continue maintenance even when I'm not actively playing the game.

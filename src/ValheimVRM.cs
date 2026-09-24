@@ -829,11 +829,14 @@ namespace ValheimVRM
 							vrmPath = sharedPath;
 							isShared = true;
 						}
-						else if (!VrmManager.VrmDic.ContainsKey("___Default"))
+						else
 						{
 							// Default character fallback
-							vrmPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "___Default.vrm");
 							vrmName = "___Default";
+							if (!VrmManager.VrmDic.ContainsKey(vrmName) || shouldReloadInMenu)
+							{
+								vrmPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "___Default.vrm");
+							}
 							isShared = false;
 						}
 

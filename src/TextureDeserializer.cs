@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using UnityEngine;
-using VRMShaders;
 using UniGLTF;
 using System.IO;
 using System;
