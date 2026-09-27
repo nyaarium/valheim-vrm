@@ -21,6 +21,8 @@ jobs:
 
       - name: Build image
         uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_RETENTION_DAYS: 7
         with:
           tags: builder
           context: .
